@@ -1,7 +1,7 @@
 import { COOKIE_NAME, CATEGORIES } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router, adminProcedure } from "./_core/trpc";
+import { publicProcedure, router, adminProcedure, editorProcedure } from "./_core/trpc";
 import { fileTypeFromBuffer } from "file-type";
 import { z } from "zod";
 import {
@@ -14,13 +14,13 @@ import {
   getPostsByCategory,
   searchPosts,
   getAllPostsAdmin,
-  getPostStats,
+  getDashboardStats,
   incrementPostViews,
+  getAllUsers,
+  updateUserRole,
 } from "./db";
 import { TRPCError } from "@trpc/server";
 import { storagePut } from "./storage";
-
-
 
 // Helper to generate slug from title
 function generateSlug(title: string): string {
@@ -32,7 +32,6 @@ function generateSlug(title: string): string {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .trim();
-  // Fallback seguro para títulos compostos só por emojis ou caracteres especiais
   return slug || `post-${Date.now()}`;
 }
 
@@ -43,53 +42,32 @@ export const appRouter = router({
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
+      return { success: true } as const;
     }),
   }),
 
   // Public posts routes
   posts: router({
-    // Get all published posts with pagination
     getPublished: publicProcedure
-      .input(
-        z.object({
-          limit: z.number().default(20),
-          offset: z.number().default(0),
-        })
-      )
+      .input(z.object({ limit: z.number().default(20), offset: z.number().default(0) }))
       .query(async ({ input }) => {
         return await getAllPublishedPosts(input.limit, input.offset);
       }),
 
-    // Get posts by category
     getByCategory: publicProcedure
-      .input(
-        z.object({
-          category: z.enum(CATEGORIES),
-          limit: z.number().default(20),
-          offset: z.number().default(0),
-        })
-      )
+      .input(z.object({ category: z.enum(CATEGORIES), limit: z.number().default(20), offset: z.number().default(0) }))
       .query(async ({ input }) => {
         return await getPostsByCategory(input.category, input.limit, input.offset);
       }),
 
-    // Get single post by slug
     getBySlug: publicProcedure
       .input(z.object({ slug: z.string() }))
       .query(async ({ input }) => {
         const post = await getPostBySlug(input.slug);
-        if (!post) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
-        }
-        // Views are incremented via the separate incrementView mutation
-        // to avoid double-counting on React Query refetches and bot crawls.
+        if (!post) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
         return post;
       }),
 
-    // Increment view counter — called once per page visit from the client
     incrementView: publicProcedure
       .input(z.object({ slug: z.string() }))
       .mutation(async ({ input }) => {
@@ -98,158 +76,124 @@ export const appRouter = router({
         return { ok: true };
       }),
 
-    // Search posts
     search: publicProcedure
       .input(z.object({ query: z.string().min(1) }))
       .query(async ({ input }) => {
         return await searchPosts(input.query);
       }),
-
   }),
 
-  // Admin posts routes
+  // Admin and Editor routes
   admin: router({
     getStats: adminProcedure.query(async () => {
-      return await getPostStats();
+      return await getDashboardStats();
     }),
+
+    // User management (Admin only)
+    users: router({
+      getAll: adminProcedure.query(async () => {
+        return await getAllUsers();
+      }),
+      updateRole: adminProcedure
+        .input(z.object({ userId: z.number(), role: z.enum(["admin", "editor", "reader"]) }))
+        .mutation(async ({ input }) => {
+          await updateUserRole(input.userId, input.role);
+          return { success: true };
+        }),
+    }),
+
+    // Posts management (Admin and Editor)
     posts: router({
-      // Get post by ID for editing
-      getById: adminProcedure
+      getById: editorProcedure
         .input(z.object({ id: z.number() }))
         .query(async ({ input }) => {
           const post = await getPostById(input.id);
-          if (!post) {
-            throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
-          }
+          if (!post) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
           return post;
         }),
 
-      // Get all posts (published and unpublished) for admin
-      getAll: adminProcedure
-        .input(
-          z.object({
-            limit: z.number().default(20),
-            offset: z.number().default(0),
-          })
-        )
+      getAll: editorProcedure
+        .input(z.object({
+          limit: z.number().default(20),
+          offset: z.number().default(0),
+          category: z.string().optional(),
+          search: z.string().optional(),
+        }))
         .query(async ({ input }) => {
-          return await getAllPostsAdmin(input.limit, input.offset);
+          return await getAllPostsAdmin(input.limit, input.offset, input.category, input.search);
         }),
 
-      // Create new post
-      create: adminProcedure
-        .input(
-          z.object({
-            title: z.string().min(1),
-            subtitle: z.string().optional(),
-            content: z.string().min(1),
-            category: z.enum(CATEGORIES),
-            author: z.string().min(1),
-            imageUrl: z.string().optional(),
-            imageKey: z.string().optional(),
-            published: z.boolean().default(false),
-          })
-        )
+      create: editorProcedure
+        .input(z.object({
+          title: z.string().min(1),
+          subtitle: z.string().optional(),
+          content: z.string().min(1),
+          category: z.enum(CATEGORIES),
+          author: z.string().min(1),
+          imageUrl: z.string().optional(),
+          imageKey: z.string().optional(),
+          published: z.boolean().default(false),
+        }))
         .mutation(async ({ input }) => {
           const slug = generateSlug(input.title);
-          
-          // Check if slug already exists
           const existing = await getPostBySlug(slug);
-          if (existing) {
-            throw new TRPCError({ code: "CONFLICT", message: "A post with this title already exists" });
-          }
+          if (existing) throw new TRPCError({ code: "CONFLICT", message: "A post with this title already exists" });
 
           return await createPost({
-            title: input.title,
+            ...input,
             slug,
-            subtitle: input.subtitle,
-            content: input.content,
-            category: input.category,
-            author: input.author,
-            imageUrl: input.imageUrl,
-            imageKey: input.imageKey,
-            published: input.published,
             publishedAt: input.published ? new Date() : null,
           });
         }),
 
-      // Update post
-      update: adminProcedure
-        .input(
-          z.object({
-            id: z.number(),
-            title: z.string().optional(),
-            subtitle: z.string().optional(),
-            content: z.string().optional(),
-            category: z.enum(CATEGORIES).optional(),
-            author: z.string().optional(),
-            imageUrl: z.string().optional(),
-            imageKey: z.string().optional(),
-            published: z.boolean().optional(),
-          })
-        )
+      update: editorProcedure
+        .input(z.object({
+          id: z.number(),
+          title: z.string().optional(),
+          subtitle: z.string().optional(),
+          content: z.string().optional(),
+          category: z.enum(CATEGORIES).optional(),
+          author: z.string().optional(),
+          imageUrl: z.string().optional(),
+          imageKey: z.string().optional(),
+          published: z.boolean().optional(),
+        }))
         .mutation(async ({ input }) => {
           const { id, ...updates } = input;
           const post = await getPostById(id);
-          
-          if (!post) {
-            throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
-          }
+          if (!post) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
 
-          // If title changed, regenerate slug
           let slug = post.slug;
           if (updates.title && updates.title !== post.title) {
             slug = generateSlug(updates.title);
             const existing = await getPostBySlug(slug);
-            if (existing && existing.id !== id) {
-              throw new TRPCError({ code: "CONFLICT", message: "A post with this title already exists" });
-            }
+            if (existing && existing.id !== id) throw new TRPCError({ code: "CONFLICT", message: "A post with this title already exists" });
           }
 
-          // Handle publish status change
           let publishedAt = post.publishedAt;
           if (updates.published !== undefined && updates.published !== post.published) {
-            if (updates.published) {
-              publishedAt = new Date();
-            } else {
-              publishedAt = null;
-            }
+            publishedAt = updates.published ? new Date() : null;
           }
 
-          return await updatePost(id, {
-            ...updates,
-            slug,
-            publishedAt,
-          });
+          return await updatePost(id, { ...updates, slug, publishedAt });
         }),
 
-      // Delete post
-      delete: adminProcedure
+      delete: editorProcedure
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input }) => {
           const post = await getPostById(input.id);
-          if (!post) {
-            throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
-          }
-
+          if (!post) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
           await deletePost(input.id);
           return { success: true };
         }),
 
-      // Upload image
-      uploadImage: adminProcedure
-        .input(
-          z.object({
-            filename: z.string(),
-            data: z.string(), // base64 encoded
-          })
-        )
+      uploadImage: editorProcedure
+        .input(z.object({ filename: z.string(), data: z.string() }))
         .mutation(async ({ input }) => {
           try {
             const buffer = Buffer.from(input.data, "base64");
-            const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
             const detected = await fileTypeFromBuffer(buffer);
-            if (!detected || !ALLOWED_TYPES.includes(detected.mime)) {
+            if (!detected || !["image/jpeg", "image/png", "image/webp", "image/gif"].includes(detected.mime)) {
               throw new TRPCError({ code: "BAD_REQUEST", message: "Formato de imagem inválido" });
             }
             const key = `posts/${Date.now()}-${input.filename}`;

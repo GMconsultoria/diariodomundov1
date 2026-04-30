@@ -17,7 +17,7 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["admin", "editor", "reader"]).default("reader").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -48,3 +48,15 @@ export const posts = mysqlTable("posts", {
 
 export type Post = typeof posts.$inferSelect;
 export type InsertPost = typeof posts.$inferInsert;
+
+/**
+ * Historical views tracking for detailed dashboard metrics
+ */
+export const postViews = mysqlTable("post_views", {
+  id: int("id").autoincrement().primaryKey(),
+  postId: int("postId").notNull(),
+  viewedAt: timestamp("viewedAt").defaultNow().notNull(),
+});
+
+export type PostView = typeof postViews.$inferSelect;
+export type InsertPostView = typeof postViews.$inferInsert;

@@ -9,6 +9,7 @@ import Article from "./pages/Article";
 import Category from "./pages/Category";
 import Search from "./pages/Search";
 import AdminLayout from "./pages/admin/AdminLayout";
+import Login from "./pages/Login";
 import About from "./pages/About";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/privacidade" component={Privacy} />
       <Route path="/termos" component={Terms} />
       <Route path="/contato" component={Contact} />
+      <Route path="/login" component={Login} />
       <Route path="/admin/*" component={AdminLayout} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}

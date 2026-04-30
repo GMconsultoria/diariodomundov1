@@ -36,3 +36,13 @@ export const adminProcedure = protectedProcedure.use(async opts => {
 
   return next({ ctx });
 });
+
+export const editorProcedure = protectedProcedure.use(async opts => {
+  const { ctx, next } = opts;
+
+  if (ctx.user.role !== 'admin' && ctx.user.role !== 'editor') {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Acesso restrito a redatores e administradores" });
+  }
+
+  return next({ ctx });
+});

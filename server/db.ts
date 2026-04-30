@@ -1,6 +1,6 @@
-import { eq, like, desc, and, sql } from "drizzle-orm";
+import { eq, like, desc, and, sql, gte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, posts, Post, InsertPost } from "../drizzle/schema";
+import { InsertUser, users, posts, Post, InsertPost, postViews } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -87,6 +87,18 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getAllUsers() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.select().from(users).orderBy(desc(users.createdAt));
+}
+
+export async function updateUserRole(userId: number, role: "admin" | "editor" | "reader") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ role }).where(eq(users.id, userId));
 }
 
 // Posts queries
@@ -220,10 +232,14 @@ export async function searchPosts(query: string, limit: number = 50): Promise<an
     .limit(limit);
 }
 
-export async function getAllPostsAdmin(limit: number = 100, offset: number = 0) {
+export async function getAllPostsAdmin(limit: number = 100, offset: number = 0, category?: string, search?: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
+  let conditions = [];
+  if (category) conditions.push(eq(posts.category, category as any));
+  if (search) conditions.push(like(posts.title, `%${search}%`));
+
   return await db
     .select({
       id: posts.id,
@@ -241,36 +257,65 @@ export async function getAllPostsAdmin(limit: number = 100, offset: number = 0) 
       updatedAt: posts.updatedAt,
     })
     .from(posts)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(posts.createdAt))
     .limit(limit)
     .offset(offset);
 }
 
-export async function getPostStats(): Promise<{ totalPosts: number; totalViews: number; categories: Record<string, number> }> {
+export async function getDashboardStats() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
-  const [stats] = await db.select({
+
+  // Basic counters
+  const [counts] = await db.select({
     totalPosts: sql<number>`COUNT(*)`,
     totalViews: sql<number>`SUM(${posts.views})`,
   }).from(posts);
 
-  const catCounts = await db.select({
-    category: posts.category,
+  const [totalUsers] = await db.select({ count: sql<number>`COUNT(*)` }).from(users);
+
+  // Views by day (last 30 days)
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const viewsByDay = await db.select({
+    day: sql<string>`DATE(${postViews.viewedAt})`,
     count: sql<number>`COUNT(*)`,
-  }).from(posts).groupBy(posts.category);
-  
-  const categories: Record<string, number> = {};
-  catCounts.forEach(row => {
-    if (row.category) {
-      categories[row.category] = Number(row.count);
-    }
-  });
-  
-  return { 
-    totalPosts: Number(stats?.totalPosts || 0), 
-    totalViews: Number(stats?.totalViews || 0), 
-    categories 
+  })
+  .from(postViews)
+  .where(gte(postViews.viewedAt, thirtyDaysAgo))
+  .groupBy(sql`DATE(${postViews.viewedAt})`)
+  .orderBy(sql`DATE(${postViews.viewedAt})`);
+
+  // Views by category
+  const viewsByCategory = await db.select({
+    category: posts.category,
+    count: sql<number>`SUM(${posts.views})`,
+  })
+  .from(posts)
+  .groupBy(posts.category);
+
+  // Top 10 most viewed posts
+  const topPosts = await db.select({
+    id: posts.id,
+    title: posts.title,
+    views: posts.views,
+    category: posts.category,
+  })
+  .from(posts)
+  .orderBy(desc(posts.views))
+  .limit(10);
+
+  return {
+    summary: {
+      totalPosts: Number(counts.totalPosts || 0),
+      totalViews: Number(counts.totalViews || 0),
+      totalUsers: Number(totalUsers.count || 0),
+    },
+    viewsByDay,
+    viewsByCategory,
+    topPosts,
   };
 }
 
@@ -278,5 +323,8 @@ export async function incrementPostViews(id: number): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  await db.update(posts).set({ views: sql`${posts.views} + 1` }).where(eq(posts.id, id));
+  await db.transaction(async (tx) => {
+    await tx.update(posts).set({ views: sql`${posts.views} + 1` }).where(eq(posts.id, id));
+    await tx.insert(postViews).values({ postId: id });
+  });
 }
