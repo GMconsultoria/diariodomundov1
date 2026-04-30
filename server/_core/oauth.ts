@@ -19,7 +19,10 @@ export function registerOAuthRoutes(app: Express) {
       const appId = ENV.appId;
       const origin = `${req.protocol}://${req.get("host")}`;
       const redirectUri = `${origin}/api/oauth/callback`;
-      const state = Buffer.from(redirectUri).toString("base64");
+      // Fix #3: embed returnTo in state so callback can redirect user back to the right page
+      const returnTo = (req.query.returnTo as string) || "/admin";
+      const stateData = `${redirectUri}|${returnTo}`;
+      const state = Buffer.from(stateData).toString("base64");
 
       const url = new URL(`${oauthPortalUrl}/app-auth`);
       url.searchParams.set("appId", appId);
@@ -68,7 +71,16 @@ export function registerOAuthRoutes(app: Express) {
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      res.redirect(302, "/");
+      // Fix #2: extract returnTo from state (format: "redirectUri|returnTo") and redirect there
+      let returnTo = "/admin";
+      try {
+        const decoded = Buffer.from(state, "base64").toString("utf-8");
+        const parts = decoded.split("|");
+        if (parts[1] && parts[1].startsWith("/")) {
+          returnTo = parts[1];
+        }
+      } catch { /* ignore — use default */ }
+      res.redirect(302, returnTo);
     } catch (error) {
       console.error("[OAuth] Callback failed", error);
       res.status(500).json({ error: "OAuth callback failed" });
