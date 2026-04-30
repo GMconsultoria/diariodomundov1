@@ -13,6 +13,9 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [, setLocation] = useLocation();
 
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+  const loginUrl = `${API_BASE_URL}/api/auth/login?returnTo=/admin`;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -30,7 +33,7 @@ export default function AdminLayout() {
             Você precisa ser um administrador para acessar esta área.
           </p>
           {!isAuthenticated ? (
-            <a href="/api/auth/login" className="no-underline">
+            <a href={loginUrl} className="no-underline">
               <button className="px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-red-700 transition-colors font-semibold">
                 Fazer Login
               </button>
@@ -134,8 +137,8 @@ function NavLink({
   const [location] = useLocation();
   // Exact match for /admin root to avoid always-active highlight on subroutes
   const isActive =
-    href === "/admin"
-      ? location === "/admin" || location === "/admin/"
+    href === "/"
+      ? location === "/" || location === ""
       : location === href || location.startsWith(href + "/");
 
   return (

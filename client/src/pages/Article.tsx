@@ -220,6 +220,7 @@ export default function Article() {
                                'iframe','figure','figcaption','div','span'],
                 ALLOWED_ATTR: ['href','src','alt','target','rel','class','width','height',
                                'allowfullscreen','frameborder','sandbox','loading'],
+                FORBID_ATTR: ['style', 'onerror', 'onload'],
                 ALLOW_UNKNOWN_PROTOCOLS: false,
               }) }} /></div>
 
