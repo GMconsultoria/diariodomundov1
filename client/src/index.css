@@ -227,6 +227,27 @@
   @apply border-l-4 border-accent pl-4 italic my-4;
 }
 
+.article-content a {
+  @apply text-accent hover:underline font-semibold cursor-pointer;
+}
+
+.article-content table {
+  @apply w-full text-left border-collapse my-6;
+}
+
+.article-content th,
+.article-content td {
+  @apply border border-border p-2;
+}
+
+.article-content th {
+  @apply bg-muted font-bold;
+}
+
+.article-content figcaption {
+  @apply text-xs text-muted-foreground mt-2 text-center italic;
+}
+
 .badge-category {
   @apply inline-block px-3 py-1 bg-accent text-accent-foreground text-xs font-semibold rounded-full;
 }

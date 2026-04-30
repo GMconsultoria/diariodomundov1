@@ -66,6 +66,7 @@ export default function Search() {
                             <img
                               src={post.imageUrl}
                               alt={post.title}
+                              loading="lazy"
                               className="w-32 h-32 object-cover rounded-lg group-hover:opacity-90 transition-opacity flex-shrink-0"
                             />
                           )}
