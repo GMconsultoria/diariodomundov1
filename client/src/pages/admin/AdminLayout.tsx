@@ -1,6 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Route, Switch, Link, useLocation, Router } from "wouter";
-import { Loader2, LogOut, Menu, X, LayoutDashboard, FileText, PlusCircle, Users, Shield, User as UserIcon } from "lucide-react";
+import { Loader2, LogOut, Menu, X, LayoutDashboard, FileText as FileTextIcon, PlusCircle, Users, Shield, User as UserIcon } from "lucide-react";
 import { useState } from "react";
 import AdminDashboard from "./AdminDashboard";
 import AdminPostsList from "./AdminPostsList";
@@ -101,7 +101,7 @@ export default function AdminLayout() {
             <NavLink
               href="/posts"
               label="Notícias"
-              icon={<FileText size={20} />}
+              icon={<FileTextIcon size={20} />}
               sidebarOpen={sidebarOpen}
             />
             <NavLink

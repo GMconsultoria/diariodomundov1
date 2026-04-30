@@ -1,6 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
-import { Shield, Mail, ArrowRight, Loader2 } from "lucide-react";
+import { Shield, Mail, ArrowRight, Loader2, FileText as FileTextIcon } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useEffect } from "react";
 
@@ -98,7 +98,7 @@ export default function Login() {
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-default">
-              <FileText className="text-accent mt-0.5" size={18} />
+              <FileTextIcon className="text-accent mt-0.5" size={18} />
               <div>
                 <p className="text-sm font-bold">Redator</p>
                 <p className="text-xs text-muted-foreground">Acesso ao módulo de notícias e publicação.</p>

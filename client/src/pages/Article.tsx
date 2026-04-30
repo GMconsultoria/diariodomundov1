@@ -176,6 +176,9 @@ export default function Article() {
                   src={post.imageUrl}
                   alt={post.title}
                   className="w-full h-96 md:h-[500px] object-cover rounded-lg"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=2070";
+                  }}
                 />
               </div>
             )}

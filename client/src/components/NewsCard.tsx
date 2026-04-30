@@ -25,6 +25,9 @@ export default function NewsCard({
               alt={post.title}
               loading="lazy"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=2070";
+              }}
             />
           </div>
         )}

@@ -64,6 +64,9 @@ export default function Home() {
                         src={featuredPost.imageUrl}
                         alt={featuredPost.title}
                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070";
+                        }}
                       />
                     )}
                     

@@ -3,7 +3,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, BarChart, Bar
 } from "recharts";
-import { Loader2, Users, Eye, FileText, TrendingUp } from "lucide-react";
+import { Loader2, Users, Eye, FileText as FileTextIcon, TrendingUp } from "lucide-react";
 
 const COLORS = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
 
@@ -21,7 +21,7 @@ export default function AdminDashboard() {
   if (!stats) return null;
 
   const summaryCards = [
-    { title: "Total de Notícias", value: stats.summary.totalPosts, icon: FileText, color: "text-blue-600" },
+    { title: "Total de Notícias", value: stats.summary.totalPosts, icon: FileTextIcon, color: "text-blue-600" },
     { title: "Visualizações Totais", value: stats.summary.totalViews.toLocaleString(), icon: Eye, color: "text-green-600" },
     { title: "Usuários Cadastrados", value: stats.summary.totalUsers, icon: Users, color: "text-purple-600" },
     { title: "Média por Notícia", value: Math.round(stats.summary.totalViews / (stats.summary.totalPosts || 1)), icon: TrendingUp, color: "text-red-600" },

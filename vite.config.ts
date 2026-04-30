@@ -79,11 +79,18 @@ function vitePluginManusDebugCollector(): Plugin {
     name: "manus-debug-collector",
 
     transformIndexHtml(html) {
+      // 1. Replace environment variables
+      const processedHtml = html
+        .replace(/%VITE_ANALYTICS_ENDPOINT%/g, process.env.VITE_ANALYTICS_ENDPOINT || "")
+        .replace(/%VITE_ANALYTICS_WEBSITE_ID%/g, process.env.VITE_ANALYTICS_WEBSITE_ID || "");
+
+      // 2. Add manus debug collector in non-production
       if (process.env.NODE_ENV === "production") {
-        return html;
+        return processedHtml;
       }
+
       return {
-        html,
+        html: processedHtml,
         tags: [
           {
             tag: "script",
