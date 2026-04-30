@@ -1,4 +1,5 @@
 import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
+import { CATEGORIES } from "../shared/const";
 
 /**
  * Core user table backing auth flow.
@@ -36,7 +37,7 @@ export const posts = mysqlTable("posts", {
   content: text("content").notNull(),
   imageUrl: varchar("imageUrl", { length: 512 }),
   imageKey: varchar("imageKey", { length: 255 }),
-  category: mysqlEnum("category", ["Política", "Economia", "Investimentos", "Ciência e Tecnologia", "Curiosidade"]).notNull(),
+  category: mysqlEnum("category", CATEGORIES as unknown as [string, ...string[]]).notNull(),
   author: varchar("author", { length: 255 }).notNull(),
   published: boolean("published").default(false).notNull(),
   views: int("views").default(0).notNull(),

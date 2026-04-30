@@ -1,4 +1,6 @@
 import { Link } from "wouter";
+import { CATEGORIES } from "@shared/const";
+import { getCategoryLink } from "@/lib/categoryUtils";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -19,31 +21,13 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-bold mb-4 uppercase">Categorias</h4>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/categoria/política" className="no-underline text-gray-300 hover:text-accent transition-colors">
-                  Política
-                </Link>
-              </li>
-              <li>
-                <Link href="/categoria/economia" className="no-underline text-gray-300 hover:text-accent transition-colors">
-                  Economia
-                </Link>
-              </li>
-              <li>
-                <Link href="/categoria/investimentos" className="no-underline text-gray-300 hover:text-accent transition-colors">
-                  Investimentos
-                </Link>
-              </li>
-              <li>
-                <Link href="/categoria/ciencia-e-tecnologia" className="no-underline text-gray-300 hover:text-accent transition-colors">
-                  Ciência e Tecnologia
-                </Link>
-              </li>
-              <li>
-                <Link href="/categoria/curiosidade" className="no-underline text-gray-300 hover:text-accent transition-colors">
-                  Curiosidade
-                </Link>
-              </li>
+              {CATEGORIES.map(category => (
+                <li key={category}>
+                  <Link href={getCategoryLink(category)} className="no-underline text-gray-300 hover:text-accent transition-colors">
+                    {category}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

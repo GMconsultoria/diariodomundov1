@@ -3,8 +3,7 @@ import { Link, useLocation } from "wouter";
 import { getCategoryLink } from "@/lib/categoryUtils";
 import { Search } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
-
-const CATEGORIES = ["Política", "Economia", "Investimentos", "Ciência e Tecnologia", "Curiosidade"];
+import { CATEGORIES } from "@shared/const";
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");

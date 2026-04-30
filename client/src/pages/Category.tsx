@@ -1,21 +1,18 @@
-import { useRoute } from "wouter";
-import { Link } from "wouter";
+import { useRoute, Link } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import NewsCard from "@/components/NewsCard";
 import { trpc } from "@/lib/trpc";
 import { getCategoryLink, categoryToSlug } from "@/lib/categoryUtils";
 import { Loader2 } from "lucide-react";
-
-const CATEGORIES = ["Política", "Economia", "Investimentos", "Ciência e Tecnologia", "Curiosidade"];
+import { useState, useEffect } from "react";
+import { CATEGORIES } from "@shared/const";
 
 // Create reverse mapping from slug to category name
 const SLUG_TO_CATEGORY: Record<string, string> = {};
 CATEGORIES.forEach(cat => {
   SLUG_TO_CATEGORY[categoryToSlug(cat)] = cat;
 });
-
-import { useState } from "react";
 
 export default function Category() {
   const [match, params] = useRoute("/categoria/:category");
@@ -24,6 +21,10 @@ export default function Category() {
 
   const [page, setPage] = useState(1);
   const pageSize = 12;
+
+  useEffect(() => {
+    setPage(1);
+  }, [category]);
 
   const { data: posts, isLoading } = trpc.posts.getByCategory.useQuery(
     { category: category as any, limit: page * pageSize },

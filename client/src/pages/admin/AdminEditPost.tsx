@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Loader2, Upload } from "lucide-react";
-
-const CATEGORIES = ["Política", "Economia", "Investimentos", "Ciência e Tecnologia", "Curiosidade"];
+import { CATEGORIES } from "@shared/const";
 
 export default function AdminEditPost() {
   const [match, params] = useRoute("/admin/posts/:id/edit");
@@ -14,9 +13,10 @@ export default function AdminEditPost() {
     title: "",
     subtitle: "",
     content: "",
-    category: "Política" as const,
+    category: CATEGORIES[0] as any,
     author: "",
     imageUrl: "",
+    imageKey: "",
     published: false,
   });
 
@@ -45,6 +45,7 @@ export default function AdminEditPost() {
         category: post.category as any,
         author: post.author,
         imageUrl: post.imageUrl || "",
+        imageKey: post.imageKey || "",
         published: post.published,
       });
     }
@@ -93,7 +94,7 @@ export default function AdminEditPost() {
         filename: file.name,
         data: base64,
       });
-      setFormData((prev) => ({ ...prev, imageUrl: result.url }));
+      setFormData((prev) => ({ ...prev, imageUrl: result.url, imageKey: result.key }));
     } finally {
       setImageLoading(false);
     }
@@ -111,6 +112,7 @@ export default function AdminEditPost() {
       category: formData.category as any,
       author: formData.author,
       imageUrl: formData.imageUrl,
+      imageKey: formData.imageKey,
       published: formData.published,
     });
   };
@@ -216,7 +218,7 @@ export default function AdminEditPost() {
                   <button
                     type="button"
                     onClick={() =>
-                      setFormData({ ...formData, imageUrl: "" })
+                      setFormData({ ...formData, imageUrl: "", imageKey: "" })
                     }
                     className="text-red-600 hover:text-red-700 font-semibold text-sm"
                   >

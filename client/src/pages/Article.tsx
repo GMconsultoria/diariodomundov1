@@ -6,7 +6,7 @@ import NewsCard from "@/components/NewsCard";
 import { trpc } from "@/lib/trpc";
 import { getCategoryLink } from "@/lib/categoryUtils";
 import { Loader2, Facebook, Twitter, MessageCircle } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import DOMPurify from "dompurify";
 
 export default function Article() {
@@ -20,9 +20,13 @@ export default function Article() {
 
   // Increment view counter once per slug (not on every React Query refetch)
   const incrementView = trpc.posts.incrementView.useMutation();
+  const viewCounted = useRef<string | null>(null);
+
   useEffect(() => {
-    if (slug) incrementView.mutate({ slug });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (slug && viewCounted.current !== slug) {
+      viewCounted.current = slug;
+      incrementView.mutate({ slug });
+    }
   }, [slug]);
 
   // Get related posts from same category (fetch 5, filter current, show 3)
@@ -215,7 +219,7 @@ export default function Article() {
                                'blockquote','a','img','table','thead','tbody','tr','th','td',
                                'iframe','figure','figcaption','div','span'],
                 ALLOWED_ATTR: ['href','src','alt','target','rel','class','width','height',
-                               'allowfullscreen','frameborder','style'],
+                               'allowfullscreen','frameborder','sandbox','loading'],
                 ALLOW_UNKNOWN_PROTOCOLS: false,
               }) }} /></div>
 

@@ -1,7 +1,7 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, CATEGORIES } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
+import { publicProcedure, router, adminProcedure } from "./_core/trpc";
 import { fileTypeFromBuffer } from "file-type";
 import { z } from "zod";
 import {
@@ -67,7 +67,7 @@ export const appRouter = router({
     getByCategory: publicProcedure
       .input(
         z.object({
-          category: z.enum(["Política", "Economia", "Investimentos", "Ciência e Tecnologia", "Curiosidade"]),
+          category: z.enum(CATEGORIES),
           limit: z.number().default(20),
           offset: z.number().default(0),
         })
@@ -143,7 +143,7 @@ export const appRouter = router({
             title: z.string().min(1),
             subtitle: z.string().optional(),
             content: z.string().min(1),
-            category: z.enum(["Política", "Economia", "Investimentos", "Ciência e Tecnologia", "Curiosidade"]),
+            category: z.enum(CATEGORIES),
             author: z.string().min(1),
             imageUrl: z.string().optional(),
             imageKey: z.string().optional(),
@@ -181,7 +181,7 @@ export const appRouter = router({
             title: z.string().optional(),
             subtitle: z.string().optional(),
             content: z.string().optional(),
-            category: z.enum(["Política", "Economia", "Investimentos", "Ciência e Tecnologia", "Curiosidade"]).optional(),
+            category: z.enum(CATEGORIES).optional(),
             author: z.string().optional(),
             imageUrl: z.string().optional(),
             imageKey: z.string().optional(),

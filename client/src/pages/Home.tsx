@@ -7,9 +7,9 @@ import { trpc } from "@/lib/trpc";
 import { getCategoryLink } from "@/lib/categoryUtils";
 import { Loader2 } from "lucide-react";
 import type { Post } from "@shared/types";
+import { CATEGORIES as ALL_CATEGORIES } from "@shared/const";
 
 const FEATURED_CATEGORIES = ["Economia", "Investimentos", "Ciência e Tecnologia"];
-const ALL_CATEGORIES = ["Política", "Economia", "Investimentos", "Ciência e Tecnologia", "Curiosidade"];
 
 export default function Home() {
   const { data: posts, isLoading } = trpc.posts.getPublished.useQuery({ limit: 30, offset: 0 });

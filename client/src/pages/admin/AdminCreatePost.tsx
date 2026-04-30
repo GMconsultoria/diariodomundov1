@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Loader2, Upload } from "lucide-react";
-
-const CATEGORIES = ["Política", "Economia", "Investimentos", "Ciência e Tecnologia", "Curiosidade"];
+import { CATEGORIES } from "@shared/const";
 
 export default function AdminCreatePost() {
   const [, setLocation] = useLocation();
@@ -11,9 +10,10 @@ export default function AdminCreatePost() {
     title: "",
     subtitle: "",
     content: "",
-    category: "Política" as const,
+    category: CATEGORIES[0],
     author: "",
     imageUrl: "",
+    imageKey: "",
     published: false,
   });
 
@@ -55,7 +55,7 @@ export default function AdminCreatePost() {
         filename: file.name,
         data: base64,
       });
-      setFormData((prev) => ({ ...prev, imageUrl: result.url }));
+      setFormData((prev) => ({ ...prev, imageUrl: result.url, imageKey: result.key }));
     } finally {
       setImageLoading(false);
     }
@@ -70,6 +70,7 @@ export default function AdminCreatePost() {
       category: formData.category as any,
       author: formData.author,
       imageUrl: formData.imageUrl,
+      imageKey: formData.imageKey,
       published: formData.published,
     });
   };
@@ -175,7 +176,7 @@ export default function AdminCreatePost() {
                   <button
                     type="button"
                     onClick={() =>
-                      setFormData({ ...formData, imageUrl: "" })
+                      setFormData({ ...formData, imageUrl: "", imageKey: "" })
                     }
                     className="text-red-600 hover:text-red-700 font-semibold text-sm"
                   >

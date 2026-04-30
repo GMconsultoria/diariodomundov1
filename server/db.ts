@@ -95,7 +95,9 @@ export async function createPost(post: InsertPost): Promise<Post> {
   if (!db) throw new Error("Database not available");
   
   const result = await db.insert(posts).values(post);
-  return { ...post, id: result[0].insertId } as Post;
+  const [created] = await db.select().from(posts).where(eq(posts.id, result[0].insertId)).limit(1);
+  if (!created) throw new Error("Failed to retrieve created post");
+  return created;
 }
 
 export async function updatePost(id: number, post: Partial<InsertPost>): Promise<Post | undefined> {
@@ -145,8 +147,12 @@ export async function getAllPublishedPosts(limit: number = 30, offset: number = 
       category: posts.category,
       author: posts.author,
       imageUrl: posts.imageUrl,
+      imageKey: posts.imageKey,
+      published: posts.published,
+      views: posts.views,
       publishedAt: posts.publishedAt,
       createdAt: posts.createdAt,
+      updatedAt: posts.updatedAt,
     })
     .from(posts)
     .where(eq(posts.published, true))
@@ -182,13 +188,27 @@ export async function getPostsByCategory(category: string, limit: number = 50, o
     .offset(offset);
 }
 
-export async function searchPosts(query: string, limit: number = 50): Promise<Post[]> {
+export async function searchPosts(query: string, limit: number = 50): Promise<any[]> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
   const searchTerm = `%${query}%`;
   return await db
-    .select()
+    .select({
+      id: posts.id,
+      title: posts.title,
+      subtitle: posts.subtitle,
+      slug: posts.slug,
+      category: posts.category,
+      author: posts.author,
+      imageUrl: posts.imageUrl,
+      imageKey: posts.imageKey,
+      published: posts.published,
+      views: posts.views,
+      publishedAt: posts.publishedAt,
+      createdAt: posts.createdAt,
+      updatedAt: posts.updatedAt,
+    })
     .from(posts)
     .where(
       and(
@@ -233,12 +253,12 @@ export async function getPostStats(): Promise<{ totalPosts: number; totalViews: 
   const [stats] = await db.select({
     totalPosts: sql<number>`COUNT(*)`,
     totalViews: sql<number>`SUM(${posts.views})`,
-  }).from(posts).where(eq(posts.published, true));
+  }).from(posts);
 
   const catCounts = await db.select({
     category: posts.category,
     count: sql<number>`COUNT(*)`,
-  }).from(posts).where(eq(posts.published, true)).groupBy(posts.category);
+  }).from(posts).groupBy(posts.category);
   
   const categories: Record<string, number> = {};
   catCounts.forEach(row => {

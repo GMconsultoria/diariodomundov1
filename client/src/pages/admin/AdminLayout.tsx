@@ -54,70 +54,70 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <aside
-        className={`${
-          sidebarOpen ? "w-64" : "w-20"
-        } bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 flex flex-col`}
-      >
-        {/* Header */}
-        <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
-          {sidebarOpen && <h2 className="text-lg font-bold text-accent">Admin</h2>}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-sidebar-accent rounded-lg transition-colors"
-          >
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
+      <Router base="/admin">
+        {/* Sidebar */}
+        <aside
+          className={`${
+            sidebarOpen ? "w-64" : "w-20"
+          } bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 flex flex-col`}
+        >
+          {/* Header */}
+          <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
+            {sidebarOpen && <h2 className="text-lg font-bold text-accent">Admin</h2>}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 hover:bg-sidebar-accent rounded-lg transition-colors"
+            >
+              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
-          <NavLink
-            href="/admin"
-            label="Dashboard"
-            sidebarOpen={sidebarOpen}
-          />
-          <NavLink
-            href="/admin/posts"
-            label="Notícias"
-            sidebarOpen={sidebarOpen}
-          />
-          <NavLink
-            href="/admin/posts/new"
-            label="Nova Notícia"
-            sidebarOpen={sidebarOpen}
-          />
-        </nav>
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-2">
+            <NavLink
+              href="/"
+              label="Dashboard"
+              sidebarOpen={sidebarOpen}
+            />
+            <NavLink
+              href="/posts"
+              label="Notícias"
+              sidebarOpen={sidebarOpen}
+            />
+            <NavLink
+              href="/posts/new"
+              label="Nova Notícia"
+              sidebarOpen={sidebarOpen}
+            />
+          </nav>
 
-        {/* User info */}
-        <div className="p-4 border-t border-sidebar-border">
-          {sidebarOpen && (
-            <div className="mb-4">
-              <p className="text-sm font-semibold truncate">{user?.name}</p>
-              <p className="text-xs text-sidebar-accent">{user?.email}</p>
-            </div>
-          )}
-          <button
-            onClick={handleLogout}
-            className="w-full px-3 py-2 bg-sidebar-accent text-sidebar-accent-foreground rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold flex items-center justify-center gap-2"
-          >
-            <LogOut size={16} />
-            {sidebarOpen && "Sair"}
-          </button>
-        </div>
-      </aside>
+          {/* User info */}
+          <div className="p-4 border-t border-sidebar-border">
+            {sidebarOpen && (
+              <div className="mb-4">
+                <p className="text-sm font-semibold truncate">{user?.name}</p>
+                <p className="text-xs text-sidebar-accent">{user?.email}</p>
+              </div>
+            )}
+            <button
+              onClick={handleLogout}
+              className="w-full px-3 py-2 bg-sidebar-accent text-sidebar-accent-foreground rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold flex items-center justify-center gap-2"
+            >
+              <LogOut size={16} />
+              {sidebarOpen && "Sair"}
+            </button>
+          </div>
+        </aside>
 
-      <main className="flex-1 overflow-auto">
-        <Router base="/admin">
+        <main className="flex-1 overflow-auto">
           <Switch>
             <Route path="/" component={AdminDashboard} />
             <Route path="/posts" component={AdminPostsList} />
             <Route path="/posts/new" component={AdminCreatePost} />
             <Route path="/posts/:id/edit" component={AdminEditPost} />
           </Switch>
-        </Router>
-      </main>
+        </main>
+      </Router>
     </div>
   );
 }
