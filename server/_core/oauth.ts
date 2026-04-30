@@ -13,7 +13,8 @@ function getQueryParam(req: Request, key: string): string | undefined {
 export function registerOAuthRoutes(app: Express) {
   // Server-side login redirect — uses OAUTH_SERVER_URL from server env,
   // avoiding the fragile client-side VITE_OAUTH_PORTAL_URL build-time bake-in.
-  app.get("/api/auth/login", (req: Request, res: Response) => {
+  const loginHandler = (req: Request, res: Response) => {
+    console.log(`[OAuth] Login request received: ${req.url}`);
     try {
       const oauthPortalUrl = ENV.oAuthServerUrl;
       const appId = ENV.appId;
@@ -35,9 +36,14 @@ export function registerOAuthRoutes(app: Express) {
       console.error("[OAuth] Failed to build login URL:", error);
       res.status(500).json({ error: "Login configuration error" });
     }
-  });
+  };
 
-  app.get("/api/oauth/callback", async (req: Request, res: Response) => {
+  // Register both with and without trailing slash to be safe
+  app.get("/api/auth/login", loginHandler);
+  app.get("/api/auth/login/", loginHandler);
+
+  const callbackHandler = async (req: Request, res: Response) => {
+    console.log(`[OAuth] Callback request received: ${req.url}`);
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
 
@@ -85,5 +91,8 @@ export function registerOAuthRoutes(app: Express) {
       console.error("[OAuth] Callback failed", error);
       res.status(500).json({ error: "OAuth callback failed" });
     }
-  });
+  };
+
+  app.get("/api/oauth/callback", callbackHandler);
+  app.get("/api/oauth/callback/", callbackHandler);
 }

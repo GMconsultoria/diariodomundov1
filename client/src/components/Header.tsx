@@ -11,6 +11,9 @@ export default function Header() {
   // Login is handled server-side at /api/auth/login which builds the OAuth redirect URL
   // using OAUTH_SERVER_URL (server env), avoiding VITE_ build-time bake-in issues.
   const loginUrl = "/api/auth/login?returnTo=/admin";
+  const handleLogin = () => {
+    window.location.href = loginUrl;
+  };
 
   const [, setLocation] = useLocation();
 
@@ -80,11 +83,12 @@ export default function Header() {
                 )}
               </>
             ) : loginUrl ? (
-              <a href={loginUrl} className="no-underline">
-                <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-semibold">
-                  Entrar
-                </button>
-              </a>
+              <button 
+                onClick={handleLogin}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-semibold"
+              >
+                Entrar
+              </button>
             ) : (
               <button
                 disabled
@@ -162,11 +166,12 @@ export default function Header() {
               )}
             </>
           ) : loginUrl ? (
-            <a href={loginUrl} className="no-underline">
-              <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-semibold">
-                Entrar
-              </button>
-            </a>
+            <button 
+              onClick={handleLogin}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-semibold"
+            >
+              Entrar
+            </button>
           ) : (
             <button
               disabled
