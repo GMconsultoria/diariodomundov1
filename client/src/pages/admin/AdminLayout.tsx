@@ -1,5 +1,4 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 import { Route, Switch, Link, useLocation, Router } from "wouter";
 import { Loader2, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
@@ -31,7 +30,7 @@ export default function AdminLayout() {
             Você precisa ser um administrador para acessar esta área.
           </p>
           {!isAuthenticated ? (
-            <a href={getLoginUrl()} className="no-underline">
+            <a href="/api/auth/login" className="no-underline">
               <button className="px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-red-700 transition-colors font-semibold">
                 Fazer Login
               </button>

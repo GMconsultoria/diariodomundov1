@@ -3,14 +3,15 @@ import { Link, useLocation } from "wouter";
 import { getCategoryLink } from "@/lib/categoryUtils";
 import { Search } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 
 const CATEGORIES = ["Política", "Economia", "Investimentos", "Ciência e Tecnologia", "Curiosidade"];
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const { user, isAuthenticated } = useAuth();
-  const loginUrl = getLoginUrl();
+  // Login is handled server-side at /api/auth/login which builds the OAuth redirect URL
+  // using OAUTH_SERVER_URL (server env), avoiding VITE_ build-time bake-in issues.
+  const loginUrl = "/api/auth/login";
 
   const [, setLocation] = useLocation();
 
