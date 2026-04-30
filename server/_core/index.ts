@@ -55,7 +55,10 @@ async function startServer() {
     try {
       let oauthPortalUrl = ENV.oAuthServerUrl;
       const appId = ENV.appId;
-      const origin = ENV.baseUrl || `${req.protocol}://${req.get("host")}`;
+      
+      // On Render/Proxies, req.protocol might be http even if external is https
+      const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+      const origin = ENV.baseUrl || `${protocol}://${req.get("host")}`;
       const redirectUri = `${origin}/api/oauth/callback`;
       const returnTo = (req.query.returnTo as string) || "/admin";
 
@@ -68,15 +71,23 @@ async function startServer() {
         oauthPortalUrl,
         appId: appId ? "PRESENT" : "MISSING",
         origin,
-        redirectUri
+        redirectUri,
+        protocol
       });
 
-      if (!appId || !oauthPortalUrl) {
-        console.error("[OAuth] Missing configuration. Falling back to defaults if possible.");
-        return res.status(500).json({ 
-          error: "Login configuration error",
-          details: "APP_ID or OAUTH_SERVER_URL is missing in both environment and code fallbacks"
-        });
+      if (!appId || !oauthPortalUrl || oauthPortalUrl.includes(req.get("host") || "")) {
+        if (oauthPortalUrl?.includes(req.get("host") || "")) {
+          console.warn("[OAuth] OAUTH_SERVER_URL points to self. Falling back to default provider.");
+          oauthPortalUrl = "https://manuspre.computer";
+        }
+        
+        if (!appId || !oauthPortalUrl) {
+          console.error("[OAuth] Missing configuration.");
+          return res.status(500).json({ 
+            error: "Login configuration error",
+            details: "APP_ID or OAUTH_SERVER_URL is missing"
+          });
+        }
       }
 
       const authUrl = new URL(`${oauthPortalUrl.replace(/\/+$/, "")}/app-auth`);
