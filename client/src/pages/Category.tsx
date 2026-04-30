@@ -15,13 +15,18 @@ CATEGORIES.forEach(cat => {
   SLUG_TO_CATEGORY[categoryToSlug(cat)] = cat;
 });
 
+import { useState } from "react";
+
 export default function Category() {
   const [match, params] = useRoute("/categoria/:category");
   const categoryParam = params?.category as string;
   const category = categoryParam ? SLUG_TO_CATEGORY[categoryParam.toLowerCase()] || "" : "";
 
+  const [page, setPage] = useState(1);
+  const pageSize = 12;
+
   const { data: posts, isLoading } = trpc.posts.getByCategory.useQuery(
-    { category: category as any, limit: 50 },
+    { category: category as any, limit: page * pageSize },
     { enabled: !!category }
   );
 
@@ -89,10 +94,21 @@ export default function Category() {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {posts.map((post) => (
-                  <NewsCard key={post.id} post={post} showCategory={true} />
-                ))}
+              <div className="flex flex-col items-center">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+                  {posts.map((post) => (
+                    <NewsCard key={post.id} post={post} showCategory={true} />
+                  ))}
+                </div>
+                
+                {posts.length >= page * pageSize && (
+                  <button
+                    onClick={() => setPage(p => p + 1)}
+                    className="mt-12 px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-gray-300 transition-colors font-semibold"
+                  >
+                    Carregar Mais
+                  </button>
+                )}
               </div>
             )}
           </div>

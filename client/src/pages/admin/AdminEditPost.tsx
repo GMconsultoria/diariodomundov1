@@ -262,24 +262,31 @@ export default function AdminEditPost() {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-4 pt-4 border-t border-border">
-            <button
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-red-700 transition-colors font-semibold flex items-center gap-2 disabled:opacity-50"
-            >
-              {updateMutation.isPending && (
-                <Loader2 size={18} className="animate-spin" />
-              )}
-              {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setLocation("/admin/posts")}
-              className="px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-gray-300 transition-colors font-semibold"
-            >
-              Cancelar
-            </button>
+          <div className="flex flex-col gap-4 pt-4 border-t border-border">
+            <div className="flex gap-4">
+              <button
+                type="submit"
+                disabled={updateMutation.isPending}
+                className="px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-red-700 transition-colors font-semibold flex items-center gap-2 disabled:opacity-50"
+              >
+                {updateMutation.isPending && (
+                  <Loader2 size={18} className="animate-spin" />
+                )}
+                {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setLocation("/admin/posts")}
+                className="px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-gray-300 transition-colors font-semibold"
+              >
+                Cancelar
+              </button>
+            </div>
+            {updateMutation.isError && (
+              <p className="text-red-600 text-sm font-medium">
+                Erro ao salvar: {updateMutation.error?.message ?? "Tente novamente."}
+              </p>
+            )}
           </div>
         </div>
       </form>

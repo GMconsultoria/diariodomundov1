@@ -24,7 +24,7 @@ import { storagePut } from "./storage";
 
 // Helper to generate slug from title
 function generateSlug(title: string): string {
-  return title
+  const slug = title
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -32,6 +32,8 @@ function generateSlug(title: string): string {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .trim();
+  // Fallback seguro para títulos compostos só por emojis ou caracteres especiais
+  return slug || `post-${Date.now()}`;
 }
 
 export const appRouter = router({
@@ -82,9 +84,18 @@ export const appRouter = router({
         if (!post) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
         }
-        // Increment views
-        await incrementPostViews(post.id);
+        // Views are incremented via the separate incrementView mutation
+        // to avoid double-counting on React Query refetches and bot crawls.
         return post;
+      }),
+
+    // Increment view counter — called once per page visit from the client
+    incrementView: publicProcedure
+      .input(z.object({ slug: z.string() }))
+      .mutation(async ({ input }) => {
+        const post = await getPostBySlug(input.slug);
+        if (post) await incrementPostViews(post.id);
+        return { ok: true };
       }),
 
     // Search posts

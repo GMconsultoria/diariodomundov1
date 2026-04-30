@@ -18,11 +18,19 @@ export default function Article() {
     { enabled: !!slug }
   );
 
-  // Get related posts from same category
-  const { data: relatedPosts } = trpc.posts.getByCategory.useQuery(
-    { category: post?.category as any, limit: 4 },
+  // Increment view counter once per slug (not on every React Query refetch)
+  const incrementView = trpc.posts.incrementView.useMutation();
+  useEffect(() => {
+    if (slug) incrementView.mutate({ slug });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
+
+  // Get related posts from same category (fetch 5, filter current, show 3)
+  const { data: relatedPostsRaw } = trpc.posts.getByCategory.useQuery(
+    { category: post?.category as any, limit: 5 },
     { enabled: !!post?.category }
   );
+  const related = relatedPostsRaw?.filter(p => p.id !== post?.id).slice(0, 3) ?? [];
 
   useEffect(() => {
     if (post) {
@@ -202,8 +210,14 @@ export default function Article() {
 
             {/* Article Content */}
             <div className="article-content mb-12">
-              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }} />
-            </div>
+              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content, {
+                ALLOWED_TAGS: ['p','br','strong','em','u','s','h2','h3','h4','ul','ol','li',
+                               'blockquote','a','img','table','thead','tbody','tr','th','td',
+                               'iframe','figure','figcaption','div','span'],
+                ALLOWED_ATTR: ['href','src','alt','target','rel','class','width','height',
+                               'allowfullscreen','frameborder','style'],
+                ALLOW_UNKNOWN_PROTOCOLS: false,
+              }) }} /></div>
 
             {/* Ad Space in Middle of Content */}
             <div className="my-12 flex justify-center">
@@ -216,12 +230,12 @@ export default function Article() {
             </div>
 
             {/* Related Articles Section */}
-            {relatedPosts && relatedPosts.length > 0 && (
+            {related.length > 0 && (
               <section className="mt-16 pt-12 border-t border-border">
                 <h2 className="text-3xl font-bold mb-8 text-foreground">Notícias Relacionadas</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {relatedPosts.filter(p => p.id !== post.id).slice(0, 3).map((related) => (
-                    <NewsCard key={related.id} post={related} showCategory={true} />
+                  {related.map((r) => (
+                    <NewsCard key={r.id} post={r} showCategory={true} />
                   ))}
                 </div>
               </section>
