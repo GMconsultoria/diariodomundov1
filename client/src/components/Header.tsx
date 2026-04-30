@@ -29,9 +29,9 @@ export default function Header() {
         <div className="container mx-auto px-4 flex items-center justify-between gap-8">
           {/* Logo */}
           <Link href="/" className="no-underline flex-shrink-0">
-            <h1 className="text-2xl md:text-3xl font-bold whitespace-nowrap">
+            <span className="text-2xl md:text-3xl font-bold whitespace-nowrap block">
               DIÁRIO DO <span className="text-red-600">MUNDO</span>
-            </h1>
+            </span>
           </Link>
 
           {/* Desktop Navigation - Categories */}

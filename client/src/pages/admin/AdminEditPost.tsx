@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, CheckCircle2, AlertCircle } from "lucide-react";
 import { CATEGORIES } from "@shared/const";
+import { toast } from "sonner";
 
 export default function AdminEditPost() {
   const [match, params] = useRoute("/admin/posts/:id/edit");
@@ -24,13 +25,22 @@ export default function AdminEditPost() {
 
   const updateMutation = trpc.admin.posts.update.useMutation({
     onSuccess: () => {
+      toast.success("Alterações salvas!", {
+        description: "A notícia foi atualizada com sucesso.",
+        icon: <CheckCircle2 className="text-green-500" />
+      });
       setLocation("/admin/posts");
     },
+    onError: (error) => {
+      toast.error("Falha ao salvar", {
+        description: error.message,
+        icon: <AlertCircle className="text-red-500" />
+      });
+    }
   });
 
   const uploadImageMutation = trpc.admin.posts.uploadImage.useMutation();
 
-  // Fetch post data
   const { data: post, isLoading, error } = trpc.admin.posts.getById.useQuery(
     { id: postId! },
     { enabled: !!postId }
@@ -55,14 +65,20 @@ export default function AdminEditPost() {
 
   if (isLoading) {
     return (
-      <div className="p-8 flex items-center justify-center">
+      <div className="p-8 flex items-center justify-center min-h-[400px]">
         <Loader2 className="animate-spin text-accent" size={40} />
       </div>
     );
   }
 
   if (error) {
-    return <div className="p-8 text-red-500">Erro ao carregar post: {error.message}</div>;
+    return (
+      <div className="p-8 flex flex-col items-center justify-center text-center">
+        <AlertCircle size={48} className="text-red-500 mb-4" />
+        <h2 className="text-2xl font-bold mb-2">Erro ao carregar notícia</h2>
+        <p className="text-muted-foreground">{error.message}</p>
+      </div>
+    );
   }
 
   const handleInputChange = (
@@ -82,7 +98,14 @@ export default function AdminEditPost() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Arquivo muito grande", { description: "O limite é 5MB." });
+      return;
+    }
+
     setImageLoading(true);
+    const uploadToast = toast.loading("Atualizando imagem...");
+    
     try {
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -95,6 +118,9 @@ export default function AdminEditPost() {
         data: base64,
       });
       setFormData((prev) => ({ ...prev, imageUrl: result.url, imageKey: result.key }));
+      toast.success("Imagem atualizada!", { id: uploadToast });
+    } catch (err) {
+      toast.error("Erro no upload", { id: uploadToast });
     } finally {
       setImageLoading(false);
     }
@@ -103,103 +129,81 @@ export default function AdminEditPost() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!postId) return;
-
-    await updateMutation.mutateAsync({
-      id: postId,
-      title: formData.title,
-      subtitle: formData.subtitle,
-      content: formData.content,
-      category: formData.category as any,
-      author: formData.author,
-      imageUrl: formData.imageUrl,
-      imageKey: formData.imageKey,
-      published: formData.published,
-    });
+    await updateMutation.mutateAsync({ id: postId, ...formData } as any);
   };
 
   return (
-    <div className="p-8">
+    <div className="p-8 animate-in fade-in duration-500">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Editar Notícia</h1>
-        <p className="text-muted-foreground">
-          Edite os detalhes da notícia
+        <h1 className="text-4xl font-bold mb-2 tracking-tight">Editar Notícia</h1>
+        <p className="text-muted-foreground text-lg">
+          Atualize os detalhes e mantenha seu público informado.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-4xl">
-        <div className="bg-card text-card-foreground rounded-lg p-6 border border-border space-y-6">
+      <form onSubmit={handleSubmit} className="max-w-5xl">
+        <div className="bg-card text-card-foreground rounded-2xl p-8 border border-border shadow-xl space-y-8">
           {/* Title */}
           <div>
-            <label className="block text-sm font-semibold mb-2">Título *</label>
+            <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-muted-foreground">Título da Matéria *</label>
             <input
               type="text"
               name="title"
               value={formData.title}
               onChange={handleInputChange}
               required
-              className="w-full px-4 py-2 bg-input text-foreground rounded-lg border border-border focus:outline-none focus:border-accent"
-              placeholder="Digite o título da notícia"
+              className="w-full px-4 py-3 bg-muted/30 text-foreground rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-lg font-bold"
             />
           </div>
 
           {/* Subtitle */}
           <div>
-            <label className="block text-sm font-semibold mb-2">Subtítulo</label>
-            <input
-              type="text"
+            <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-muted-foreground">Linha de Apoio (Subtítulo)</label>
+            <textarea
               name="subtitle"
               value={formData.subtitle}
               onChange={handleInputChange}
-              className="w-full px-4 py-2 bg-input text-foreground rounded-lg border border-border focus:outline-none focus:border-accent"
-              placeholder="Digite o subtítulo (opcional)"
+              rows={2}
+              className="w-full px-4 py-3 bg-muted/30 text-foreground rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
             />
           </div>
 
           {/* Category and Author */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label className="block text-sm font-semibold mb-2">
-                Categoria *
-              </label>
+              <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-muted-foreground">Categoria *</label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 bg-input text-foreground rounded-lg border border-border focus:outline-none focus:border-accent"
+                className="w-full px-4 py-3 bg-muted/30 text-foreground rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent font-semibold"
               >
                 {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
+                  <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2">
-                Autor *
-              </label>
+              <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-muted-foreground">Autor *</label>
               <input
                 type="text"
                 name="author"
                 value={formData.author}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-2 bg-input text-foreground rounded-lg border border-border focus:outline-none focus:border-accent"
-                placeholder="Nome do autor"
+                className="w-full px-4 py-3 bg-muted/30 text-foreground rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent font-semibold"
               />
             </div>
           </div>
 
           {/* Image upload */}
-          <div>
-            <label className="block text-sm font-semibold mb-2">
-              Imagem de Capa
-            </label>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:bg-red-700 transition-colors font-semibold cursor-pointer">
-                <Upload size={18} />
-                {imageLoading ? "Enviando..." : "Selecionar Imagem"}
+          <div className="p-6 bg-muted/20 rounded-2xl border border-dashed border-border">
+            <label className="block text-sm font-bold mb-4 uppercase tracking-wider text-muted-foreground">Imagem de Capa</label>
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <label className={`flex items-center gap-3 px-8 py-4 ${imageLoading ? 'bg-muted' : 'bg-accent'} text-white rounded-xl hover:scale-105 transition-all font-bold cursor-pointer shadow-lg shadow-accent/20`}>
+                <Upload size={20} />
+                {imageLoading ? "Subindo..." : "Trocar Imagem"}
                 <input
                   type="file"
                   accept="image/*"
@@ -209,20 +213,14 @@ export default function AdminEditPost() {
                 />
               </label>
               {formData.imageUrl && (
-                <div className="flex items-center gap-2">
-                  <img
-                    src={formData.imageUrl}
-                    alt="Preview"
-                    className="w-16 h-16 object-cover rounded-lg"
-                  />
+                <div className="relative group">
+                  <img src={formData.imageUrl} alt="Preview" className="w-40 h-24 object-cover rounded-lg ring-2 ring-accent" />
                   <button
                     type="button"
-                    onClick={() =>
-                      setFormData({ ...formData, imageUrl: "", imageKey: "" })
-                    }
-                    className="text-red-600 hover:text-red-700 font-semibold text-sm"
+                    onClick={() => setFormData({ ...formData, imageUrl: "", imageKey: "" })}
+                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 shadow-lg hover:bg-red-700"
                   >
-                    Remover
+                    <AlertCircle size={16} />
                   </button>
                 </div>
               )}
@@ -231,64 +229,51 @@ export default function AdminEditPost() {
 
           {/* Content */}
           <div>
-            <label className="block text-sm font-semibold mb-2">
-              Conteúdo *
-            </label>
+            <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-muted-foreground">Corpo da Notícia *</label>
             <textarea
               name="content"
               value={formData.content}
               onChange={handleInputChange}
               required
-              rows={12}
-              className="w-full px-4 py-2 bg-input text-foreground rounded-lg border border-border focus:outline-none focus:border-accent font-mono text-sm"
-              placeholder="Digite o conteúdo da notícia (suporta HTML)"
+              rows={15}
+              className="w-full px-6 py-4 bg-muted/10 text-foreground rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent font-serif text-lg leading-relaxed"
             />
-            <p className="text-xs text-muted-foreground mt-2">
-              Você pode usar HTML para formatar o conteúdo
-            </p>
           </div>
 
-          {/* Publish checkbox */}
-          <div className="flex items-center gap-3">
+          {/* Status Toggle */}
+          <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl w-fit">
             <input
               type="checkbox"
               name="published"
               id="published"
               checked={formData.published}
               onChange={handleInputChange}
-              className="w-4 h-4 rounded border-border"
+              className="w-5 h-5 rounded accent-accent"
             />
-            <label htmlFor="published" className="font-semibold cursor-pointer">
-              Publicada
+            <label htmlFor="published" className="font-bold text-sm cursor-pointer select-none">
+              {formData.published ? "Esta notícia está PUBLICADA" : "Esta notícia é um RASCUNHO"}
             </label>
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col gap-4 pt-4 border-t border-border">
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                disabled={updateMutation.isPending}
-                className="px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-red-700 transition-colors font-semibold flex items-center gap-2 disabled:opacity-50"
-              >
-                {updateMutation.isPending && (
-                  <Loader2 size={18} className="animate-spin" />
-                )}
-                {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setLocation("/admin/posts")}
-                className="px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-gray-300 transition-colors font-semibold"
-              >
-                Cancelar
-              </button>
-            </div>
-            {updateMutation.isError && (
-              <p className="text-red-600 text-sm font-medium">
-                Erro ao salvar: {updateMutation.error?.message ?? "Tente novamente."}
-              </p>
-            )}
+          <div className="flex flex-col md:flex-row gap-4 pt-6 border-t border-border">
+            <button
+              type="submit"
+              disabled={updateMutation.isPending || imageLoading}
+              className="px-8 py-4 bg-accent text-white rounded-xl hover:bg-red-700 transition-all font-bold flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-accent/20 min-w-[200px]"
+            >
+              {updateMutation.isPending ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : <CheckCircle2 size={20} />}
+              {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocation("/admin/posts")}
+              className="px-8 py-4 bg-muted text-foreground rounded-xl hover:bg-border transition-all font-bold"
+            >
+              Cancelar
+            </button>
           </div>
         </div>
       </form>

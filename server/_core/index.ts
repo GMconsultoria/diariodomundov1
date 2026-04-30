@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import compression from "compression";
 import { createServer } from "http";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerStorageProxy } from "./storageProxy";
@@ -20,6 +21,19 @@ function getQueryParam(req: express.Request, name: string): string {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // Performance: Enable Gzip compression
+  app.use(compression());
+
+  // Security: Basic hardening headers
+  app.use((req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("X-XSS-Protection", "1; mode=block");
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    next();
+  });
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -39,9 +53,8 @@ async function startServer() {
   const loginHandler = (req: express.Request, res: express.Response) => {
     console.log(`[OAuth] Login request received: ${req.url}`);
     try {
-      // Hardcoded for production stability on Render
-      let oauthPortalUrl = "https://manuspre.computer";
-      const appId = "app-web";
+      let oauthPortalUrl = ENV.oAuthServerUrl;
+      const appId = ENV.appId;
       const origin = ENV.baseUrl || `${req.protocol}://${req.get("host")}`;
       const redirectUri = `${origin}/api/oauth/callback`;
       const returnTo = (req.query.returnTo as string) || "/admin";

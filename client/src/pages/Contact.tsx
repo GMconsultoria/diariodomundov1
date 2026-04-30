@@ -20,8 +20,10 @@ export default function Contact() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real application, you would send this data to a backend
-    console.log("Form submitted:", formData);
+    // Simulate API call
+    toast.success("Mensagem enviada!", {
+      description: "Agradecemos o contato. Responderemos em breve.",
+    });
     setSubmitted(true);
     setFormData({ name: "", email: "", subject: "", message: "" });
     setTimeout(() => setSubmitted(false), 5000);
