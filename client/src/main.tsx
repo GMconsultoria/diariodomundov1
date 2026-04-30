@@ -23,8 +23,9 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
 
   if (!isUnauthorized) return;
-
-  window.location.href = "/api/auth/login";
+  
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+  window.location.href = `${API_BASE_URL}/api/auth/login`;
 };
 
 queryClient.getQueryCache().subscribe(event => {

@@ -10,7 +10,8 @@ export default function Header() {
   const { user, isAuthenticated } = useAuth();
   // Login is handled server-side at /api/auth/login which builds the OAuth redirect URL
   // using OAUTH_SERVER_URL (server env), avoiding VITE_ build-time bake-in issues.
-  const loginUrl = "/api/auth/login?returnTo=/admin";
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+  const loginUrl = `${API_BASE_URL}/api/auth/login?returnTo=/admin`;
   const handleLogin = () => {
     window.location.href = loginUrl;
   };

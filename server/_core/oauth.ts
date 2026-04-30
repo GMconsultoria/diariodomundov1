@@ -18,7 +18,7 @@ export function registerOAuthRoutes(app: Express) {
     try {
       const oauthPortalUrl = ENV.oAuthServerUrl;
       const appId = ENV.appId;
-      const origin = `${req.protocol}://${req.get("host")}`;
+      const origin = ENV.baseUrl || `${req.protocol}://${req.get("host")}`;
       const redirectUri = `${origin}/api/oauth/callback`;
       // Fix #3: embed returnTo in state so callback can redirect user back to the right page
       const returnTo = (req.query.returnTo as string) || "/admin";
