@@ -1,6 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
-import { Route, Switch, useLocation, Router } from "wouter";
+import { Route, Switch, Link, useLocation, Router } from "wouter";
 import { Loader2, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import AdminDashboard from "./AdminDashboard";
@@ -37,11 +37,11 @@ export default function AdminLayout() {
               </button>
             </a>
           ) : (
-            <a href="/" className="no-underline">
+            <Link href="/" className="no-underline">
               <button className="px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-red-700 transition-colors font-semibold">
                 Voltar para Home
               </button>
-            </a>
+            </Link>
           )}
         </div>
       </div>
@@ -133,10 +133,14 @@ function NavLink({
   sidebarOpen: boolean;
 }) {
   const [location] = useLocation();
-  const isActive = location === href || location.startsWith(href + "/");
+  // Exact match for /admin root to avoid always-active highlight on subroutes
+  const isActive =
+    href === "/admin"
+      ? location === "/admin" || location === "/admin/"
+      : location === href || location.startsWith(href + "/");
 
   return (
-    <a href={href} className="no-underline">
+    <Link href={href} className="no-underline">
       <button
         className={`w-full px-3 py-2 rounded-lg transition-colors text-sm font-semibold text-left flex items-center gap-3 ${
           isActive
@@ -147,6 +151,6 @@ function NavLink({
         <span className="w-5 h-5 flex-shrink-0" />
         {sidebarOpen && label}
       </button>
-    </a>
+    </Link>
   );
 }

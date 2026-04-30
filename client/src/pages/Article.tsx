@@ -20,7 +20,7 @@ export default function Article() {
 
   // Get related posts from same category
   const { data: relatedPosts } = trpc.posts.getByCategory.useQuery(
-    { category: post?.category as any, limit: 6 },
+    { category: post?.category as any, limit: 4 },
     { enabled: !!post?.category }
   );
 

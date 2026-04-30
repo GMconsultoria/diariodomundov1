@@ -159,6 +159,8 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "client", "src"),
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+      // Type-only alias — server code must NEVER be imported at runtime on the client
+      "@server": path.resolve(import.meta.dirname, "server"),
     },
   },
   envDir: path.resolve(import.meta.dirname),

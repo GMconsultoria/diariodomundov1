@@ -6,7 +6,6 @@ import NewsCard from "@/components/NewsCard";
 import { trpc } from "@/lib/trpc";
 import { getCategoryLink, categoryToSlug } from "@/lib/categoryUtils";
 import { Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
 
 const CATEGORIES = ["Política", "Economia", "Investimentos", "Ciência e Tecnologia", "Curiosidade"];
 

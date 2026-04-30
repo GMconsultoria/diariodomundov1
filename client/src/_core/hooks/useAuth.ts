@@ -63,7 +63,8 @@ export function useAuth(options?: UseAuthOptions) {
     if (typeof window === "undefined") return;
     if (window.location.pathname === redirectPath) return;
 
-    window.location.href = redirectPath
+    // OAuth redirect requires full page navigation (not SPA routing)
+    window.location.href = redirectPath;
   }, [
     redirectOnUnauthenticated,
     redirectPath,

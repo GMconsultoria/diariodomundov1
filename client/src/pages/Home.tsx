@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -12,27 +12,16 @@ const FEATURED_CATEGORIES = ["Economia", "Investimentos", "Ciência e Tecnologia
 const ALL_CATEGORIES = ["Política", "Economia", "Investimentos", "Ciência e Tecnologia", "Curiosidade"];
 
 export default function Home() {
-  const { data: posts, isLoading } = trpc.posts.getPublished.useQuery({ limit: 100, offset: 0 });
-  const [featuredPost, setFeaturedPost] = useState<Post | null>(null);
-  const [categoryPosts, setCategoryPosts] = useState<Record<string, Post[]>>({});
+  const { data: posts, isLoading } = trpc.posts.getPublished.useQuery({ limit: 30, offset: 0 });
+  const featuredPost = useMemo(() => posts?.[0] ?? null, [posts]);
 
-  useEffect(() => {
-    if (!posts?.length) return;
-
-    setFeaturedPost(posts[0]);
-    
-    // Group posts by all categories
+  const categoryPosts = useMemo(() => {
     const grouped: Record<string, Post[]> = {};
-    ALL_CATEGORIES.forEach(cat => {
-      grouped[cat] = [];
+    ALL_CATEGORIES.forEach(cat => { grouped[cat] = []; });
+    posts?.forEach(post => {
+      if (grouped[post.category]) grouped[post.category].push(post);
     });
-    
-    posts.forEach(post => {
-      if (grouped[post.category]) {
-        grouped[post.category].push(post);
-      }
-    });
-    setCategoryPosts(grouped);
+    return grouped;
   }, [posts]);
 
   if (isLoading) {

@@ -1,14 +1,11 @@
-import { useLocation, useSearch } from "wouter";
-import { Link } from "wouter";
+import { useSearch, Link } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { trpc } from "@/lib/trpc";
 import { getCategoryLink } from "@/lib/categoryUtils";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
 
 export default function Search() {
-  const [location] = useLocation();
   const search = useSearch();
   const query = new URLSearchParams(search).get("q") || "";
   const searchPerformed = !!query;

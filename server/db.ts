@@ -132,7 +132,7 @@ export async function getPostBySlug(slug: string): Promise<Post | undefined> {
   return result[0];
 }
 
-export async function getAllPublishedPosts(limit: number = 100, offset: number = 0) {
+export async function getAllPublishedPosts(limit: number = 30, offset: number = 0) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
@@ -155,12 +155,26 @@ export async function getAllPublishedPosts(limit: number = 100, offset: number =
     .offset(offset);
 }
 
-export async function getPostsByCategory(category: string, limit: number = 100, offset: number = 0): Promise<Post[]> {
+export async function getPostsByCategory(category: string, limit: number = 50, offset: number = 0) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
   return await db
-    .select()
+    .select({
+      id: posts.id,
+      title: posts.title,
+      subtitle: posts.subtitle,
+      slug: posts.slug,
+      category: posts.category,
+      author: posts.author,
+      imageUrl: posts.imageUrl,
+      imageKey: posts.imageKey,
+      published: posts.published,
+      views: posts.views,
+      publishedAt: posts.publishedAt,
+      createdAt: posts.createdAt,
+      updatedAt: posts.updatedAt,
+    })
     .from(posts)
     .where(and(eq(posts.published, true), eq(posts.category, category as any)))
     .orderBy(desc(posts.publishedAt))
@@ -186,12 +200,26 @@ export async function searchPosts(query: string, limit: number = 50): Promise<Po
     .limit(limit);
 }
 
-export async function getAllPostsAdmin(limit: number = 100, offset: number = 0): Promise<Post[]> {
+export async function getAllPostsAdmin(limit: number = 100, offset: number = 0) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
   return await db
-    .select()
+    .select({
+      id: posts.id,
+      title: posts.title,
+      subtitle: posts.subtitle,
+      slug: posts.slug,
+      category: posts.category,
+      author: posts.author,
+      imageUrl: posts.imageUrl,
+      imageKey: posts.imageKey,
+      published: posts.published,
+      views: posts.views,
+      publishedAt: posts.publishedAt,
+      createdAt: posts.createdAt,
+      updatedAt: posts.updatedAt,
+    })
     .from(posts)
     .orderBy(desc(posts.createdAt))
     .limit(limit)
