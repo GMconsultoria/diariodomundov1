@@ -36,20 +36,32 @@ async function startServer() {
       const redirectUri = `${origin}/api/oauth/callback`;
       const returnTo = (req.query.returnTo as string) || "/admin";
 
-      if (!appId) {
-        console.error("[OAuth] Missing APP_ID in environment");
-        return res.status(500).send("Login configuration error: Missing APP_ID");
+      console.log("[OAuth] Configuration check:", {
+        oauthPortalUrl,
+        appId: appId ? "PRESENT" : "MISSING",
+        origin,
+        redirectUri,
+        returnTo
+      });
+
+      if (!appId || !oauthPortalUrl) {
+        console.error("[OAuth] Missing required configuration:", { appId: !!appId, oauthPortalUrl: !!oauthPortalUrl });
+        return res.status(500).json({ 
+          error: "Login configuration error",
+          details: "Missing APP_ID or OAUTH_SERVER_URL"
+        });
       }
 
-      const url = new URL(`${oauthPortalUrl}/app-auth`);
-      url.searchParams.set("appId", appId);
-      url.searchParams.set("redirectUri", redirectUri);
-      url.searchParams.set("state", JSON.stringify({ returnTo }));
+      const authUrl = new URL(`${oauthPortalUrl.replace(/\/+$/, "")}/app-auth`);
+      authUrl.searchParams.set("appId", appId);
+      authUrl.searchParams.set("redirectUri", redirectUri);
+      authUrl.searchParams.set("state", JSON.stringify({ returnTo }));
 
-      res.redirect(302, url.toString());
+      console.log("[OAuth] Redirecting to:", authUrl.toString());
+      return res.redirect(302, authUrl.toString());
     } catch (error) {
       console.error("[OAuth] Failed to build login URL:", error);
-      res.status(500).json({ error: "Login configuration error" });
+      return res.status(500).json({ error: "Login configuration error" });
     }
   };
 
