@@ -39,8 +39,9 @@ async function startServer() {
   const loginHandler = (req: express.Request, res: express.Response) => {
     console.log(`[OAuth] Login request received: ${req.url}`);
     try {
-      let oauthPortalUrl = ENV.oAuthServerUrl;
-      const appId = ENV.appId;
+      // Hardcoded for production stability on Render
+      let oauthPortalUrl = "https://manuspre.computer";
+      const appId = "app-web";
       const origin = ENV.baseUrl || `${req.protocol}://${req.get("host")}`;
       const redirectUri = `${origin}/api/oauth/callback`;
       const returnTo = (req.query.returnTo as string) || "/admin";
