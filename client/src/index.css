@@ -1,0 +1,275 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --primary: oklch(0.6 0.2 0);
+  --primary-foreground: var(--color-blue-50);
+  --sidebar-primary: oklch(0.2 0 0);
+  --sidebar-primary-foreground: var(--color-blue-50);
+  --chart-1: oklch(0.6 0.2 0);
+  --chart-2: oklch(0.5 0.15 0);
+  --chart-3: oklch(0.4 0.1 0);
+  --chart-4: oklch(0.3 0.08 0);
+  --chart-5: oklch(0.2 0.05 0);
+  --radius: 0.65rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.15 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+  --secondary: oklch(0.95 0 0);
+  --secondary-foreground: oklch(0.3 0 0);
+  --muted: oklch(0.9 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: #DC143C;
+  --accent-foreground: oklch(1 0 0);
+  --destructive: #DC143C;
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.92 0 0);
+  --input: oklch(0.95 0 0);
+  --ring: #DC143C;
+  --sidebar: oklch(0.15 0 0);
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-accent: #DC143C;
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.25 0 0);
+  --sidebar-ring: #DC143C;
+}
+
+.dark {
+  --primary: oklch(0.6 0.2 0);
+  --primary-foreground: var(--color-blue-50);
+  --sidebar-primary: oklch(0.6 0.2 0);
+  --sidebar-primary-foreground: var(--color-blue-50);
+  --background: oklch(0.12 0 0);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.18 0 0);
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.18 0 0);
+  --popover-foreground: oklch(0.95 0 0);
+  --secondary: oklch(0.22 0 0);
+  --secondary-foreground: oklch(0.8 0 0);
+  --muted: oklch(0.25 0 0);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: #DC143C;
+  --accent-foreground: oklch(1 0 0);
+  --destructive: #DC143C;
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.25 0 0);
+  --input: oklch(0.2 0 0);
+  --ring: #DC143C;
+  --chart-1: oklch(0.6 0.2 0);
+  --chart-2: oklch(0.5 0.15 0);
+  --chart-3: oklch(0.4 0.1 0);
+  --chart-4: oklch(0.3 0.08 0);
+  --chart-5: oklch(0.2 0.05 0);
+  --sidebar: oklch(0.12 0 0);
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-accent: #DC143C;
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.25 0 0);
+  --sidebar-ring: #DC143C;
+}
+
+@layer base {
+  @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Merriweather', serif;
+    @apply font-bold;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl font-bold leading-tight;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl font-bold;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl font-bold;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+@layer components {
+  /**
+   * Custom container utility that centers content and adds responsive padding.
+   *
+   * This overrides Tailwind's default container behavior to:
+   * - Auto-center content (mx-auto)
+   * - Add responsive horizontal padding
+   * - Set max-width for large screens
+   *
+   * Usage: <div className="container">...</div>
+   *
+   * For custom widths, use max-w-* utilities directly:
+   * <div className="max-w-6xl mx-auto px-4">...</div>
+   */
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem; /* 16px - mobile padding */
+    padding-right: 1rem;
+  }
+
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 2rem; /* 32px - desktop padding */
+      padding-right: 2rem;
+      max-width: 1280px; /* Standard content width */
+    }
+  }
+}
+
+/* News portal specific styles */
+.article-content {
+  @apply max-w-none;
+  font-family: 'Inter', sans-serif;
+}
+
+.article-content h2 {
+  @apply text-2xl font-bold mt-8 mb-4;
+}
+
+.article-content p {
+  @apply mb-4 leading-relaxed;
+}
+
+.article-content img {
+  @apply w-full rounded-lg my-6;
+}
+
+.article-content ul,
+.article-content ol {
+  @apply ml-6 mb-4;
+}
+
+.article-content li {
+  @apply mb-2;
+}
+
+.article-content blockquote {
+  @apply border-l-4 border-accent pl-4 italic my-4;
+}
+
+.badge-category {
+  @apply inline-block px-3 py-1 bg-accent text-accent-foreground text-xs font-semibold rounded-full;
+}
+
+.news-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+}
+
+.news-card {
+  @apply bg-card text-card-foreground rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow;
+}
+
+.news-card-image {
+  @apply w-full h-48 object-cover;
+}
+
+.news-card-content {
+  @apply p-4;
+}
+
+.news-card-title {
+  @apply text-lg font-bold mb-2 line-clamp-2;
+}
+
+.news-card-excerpt {
+  @apply text-sm text-muted-foreground line-clamp-2;
+}
+
+.news-card-meta {
+  @apply text-xs text-muted-foreground mt-3;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}

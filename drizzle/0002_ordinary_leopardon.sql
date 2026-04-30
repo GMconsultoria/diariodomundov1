@@ -1,0 +1,1 @@
+ALTER TABLE `posts` MODIFY COLUMN `category` enum('Política','Economia','Investimentos','Ciência e Tecnologia','Curiosidade') NOT NULL;

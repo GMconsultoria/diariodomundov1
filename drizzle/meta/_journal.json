@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1776732060586,
+      "tag": "0000_dashing_malcolm_colcord",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1776732200117,
+      "tag": "0001_certain_darkstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1776733359344,
+      "tag": "0002_ordinary_leopardon",
+      "breakpoints": true
+    }
+  ]
+}
