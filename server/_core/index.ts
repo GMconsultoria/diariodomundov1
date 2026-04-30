@@ -78,8 +78,8 @@ async function startServer() {
     }
   };
 
-  app.get("/api/auth/login", loginHandler);
-  app.get("/api/auth/login/", loginHandler);
+  app.get("/api/auth-login", loginHandler);
+  app.get("/api/auth-login/", loginHandler);
 
   app.get("/api/oauth/callback", async (req: express.Request, res: express.Response) => {
     console.log(`[OAuth] Callback received: ${req.url}`);
