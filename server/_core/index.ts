@@ -57,11 +57,11 @@ async function startServer() {
         redirectUri
       });
 
-      if (!appId || !oauthPortalUrl || oauthPortalUrl.includes(req.get("host") || "")) {
-        console.error("[OAuth] Invalid or missing configuration. Check OAUTH_SERVER_URL.");
+      if (!appId || !oauthPortalUrl) {
+        console.error("[OAuth] Missing configuration. Falling back to defaults if possible.");
         return res.status(500).json({ 
           error: "Login configuration error",
-          details: "Invalid OAUTH_SERVER_URL or missing APP_ID"
+          details: "APP_ID or OAUTH_SERVER_URL is missing in both environment and code fallbacks"
         });
       }
 
