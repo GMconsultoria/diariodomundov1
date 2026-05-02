@@ -19,6 +19,7 @@ function getQueryParam(req: express.Request, name: string): string {
 }
 
 async function startServer() {
+  console.log("[Server] Version: 1.2.3-diagnostics");
   const app = express();
   const server = createServer(app);
 

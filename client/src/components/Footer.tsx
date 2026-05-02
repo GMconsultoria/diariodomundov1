@@ -92,7 +92,7 @@ export default function Footer() {
             © {currentYear} Diário do Mundo. Todos os direitos reservados.
           </p>
           <p className="text-sm text-gray-400 mt-4 md:mt-0">
-            Desenvolvido com ❤️ para jornalismo de qualidade
+            Desenvolvido com ❤️ para jornalismo de qualidade | v1.2.3-diagnostics
           </p>
         </div>
       </div>

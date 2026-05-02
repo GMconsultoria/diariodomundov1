@@ -278,6 +278,18 @@ export async function getDashboardStats() {
   if (!db) throw new Error("Database not available");
 
   try {
+    console.log("[Database] Diagnostic check starting...");
+    const dbUrl = process.env.DATABASE_URL || "";
+    console.log(`[Database] Connection protocol: ${dbUrl.split(':')[0]}`);
+    
+    try {
+      const tables = await db.execute(sql`SHOW TABLES`);
+      console.log("[Database] Available tables:", JSON.stringify(tables));
+    } catch (e) {
+      console.log("[Database] SHOW TABLES failed, trying SELECT 1...");
+      await db.execute(sql`SELECT 1`);
+    }
+
     console.log("[Database] Fetching dashboard stats...");
     
     // Basic counters
