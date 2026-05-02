@@ -13,6 +13,7 @@ export default function AdminUsersList() {
   });
 
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [pendingRole, setPendingRole] = useState<"admin" | "editor" | "reader" | null>(null);
 
   if (isLoading) {
     return (
@@ -22,9 +23,19 @@ export default function AdminUsersList() {
     );
   }
 
-  const handleUpdateRole = async (userId: number, role: "admin" | "editor" | "reader") => {
-    await updateRoleMutation.mutateAsync({ userId, role });
+  const handleUpdateRole = async (userId: number) => {
+    if (!pendingRole) {
+      setEditingId(null);
+      return;
+    }
+    await updateRoleMutation.mutateAsync({ userId, role: pendingRole });
     setEditingId(null);
+    setPendingRole(null);
+  };
+
+  const startEditing = (user: any) => {
+    setEditingId(user.id);
+    setPendingRole(user.role);
   };
 
   return (
@@ -61,8 +72,8 @@ export default function AdminUsersList() {
                   {editingId === user.id ? (
                     <select
                       className="bg-background border border-border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                      defaultValue={user.role}
-                      onChange={(e) => handleUpdateRole(user.id, e.target.value as any)}
+                      value={pendingRole || user.role}
+                      onChange={(e) => setPendingRole(e.target.value as any)}
                     >
                       <option value="admin">Administrador</option>
                       <option value="editor">Redator</option>
@@ -84,10 +95,13 @@ export default function AdminUsersList() {
                 </td>
                 <td className="py-4 px-6 text-right">
                   <button
-                    onClick={() => setEditingId(editingId === user.id ? null : user.id)}
-                    className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-accent"
+                    onClick={() => editingId === user.id ? handleUpdateRole(user.id) : startEditing(user)}
+                    disabled={updateRoleMutation.isPending}
+                    className="p-2 hover:bg-muted rounded-lg transition-all text-muted-foreground hover:text-accent disabled:opacity-50"
                   >
-                    {editingId === user.id ? <Check size={18} /> : <Edit2 size={18} />}
+                    {editingId === user.id ? (
+                      updateRoleMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} className="text-green-600" />
+                    ) : <Edit2 size={18} />}
                   </button>
                 </td>
               </tr>

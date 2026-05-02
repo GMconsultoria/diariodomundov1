@@ -267,56 +267,61 @@ export async function getDashboardStats() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  // Basic counters
-  const [counts] = await db.select({
-    totalPosts: sql<number>`COUNT(*)`,
-    totalViews: sql<number>`SUM(${posts.views})`,
-  }).from(posts);
+  try {
+    // Basic counters
+    const [counts] = await db.select({
+      totalPosts: sql<number>`COUNT(*)`,
+      totalViews: sql<number>`CAST(SUM(${posts.views}) AS UNSIGNED)`,
+    }).from(posts);
 
-  const [totalUsers] = await db.select({ count: sql<number>`COUNT(*)` }).from(users);
+    const [totalUsers] = await db.select({ count: sql<number>`COUNT(*)` }).from(users);
 
-  // Views by day (last 30 days)
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // Views by day (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const viewsByDay = await db.select({
-    day: sql<string>`DATE(${postViews.viewedAt})`,
-    count: sql<number>`COUNT(*)`,
-  })
-  .from(postViews)
-  .where(gte(postViews.viewedAt, thirtyDaysAgo))
-  .groupBy(sql`DATE(${postViews.viewedAt})`)
-  .orderBy(sql`DATE(${postViews.viewedAt})`);
+    const viewsByDay = await db.select({
+      day: sql<string>`DATE(${postViews.viewedAt})`,
+      count: sql<number>`COUNT(*)`,
+    })
+    .from(postViews)
+    .where(gte(postViews.viewedAt, thirtyDaysAgo))
+    .groupBy(sql`DATE(${postViews.viewedAt})`)
+    .orderBy(sql`DATE(${postViews.viewedAt})`);
 
-  // Views by category
-  const viewsByCategory = await db.select({
-    category: posts.category,
-    count: sql<number>`SUM(${posts.views})`,
-  })
-  .from(posts)
-  .groupBy(posts.category);
+    // Views by category
+    const viewsByCategory = await db.select({
+      category: posts.category,
+      count: sql<number>`CAST(SUM(${posts.views}) AS UNSIGNED)`,
+    })
+    .from(posts)
+    .groupBy(posts.category);
 
-  // Top 10 most viewed posts
-  const topPosts = await db.select({
-    id: posts.id,
-    title: posts.title,
-    views: posts.views,
-    category: posts.category,
-  })
-  .from(posts)
-  .orderBy(desc(posts.views))
-  .limit(10);
+    // Top 10 most viewed posts
+    const topPosts = await db.select({
+      id: posts.id,
+      title: posts.title,
+      views: posts.views,
+      category: posts.category,
+    })
+    .from(posts)
+    .orderBy(desc(posts.views))
+    .limit(10);
 
-  return {
-    summary: {
-      totalPosts: Number(counts.totalPosts || 0),
-      totalViews: Number(counts.totalViews || 0),
-      totalUsers: Number(totalUsers.count || 0),
-    },
-    viewsByDay,
-    viewsByCategory,
-    topPosts,
-  };
+    return {
+      summary: {
+        totalPosts: Number(counts?.totalPosts || 0),
+        totalViews: Number(counts?.totalViews || 0),
+        totalUsers: Number(totalUsers?.count || 0),
+      },
+      viewsByDay: viewsByDay || [],
+      viewsByCategory: viewsByCategory || [],
+      topPosts: topPosts || [],
+    };
+  } catch (error) {
+    console.error("[Database] getDashboardStats error:", error);
+    throw error;
+  }
 }
 
 export async function incrementPostViews(id: number): Promise<void> {

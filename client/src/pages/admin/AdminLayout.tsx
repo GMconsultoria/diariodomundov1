@@ -178,7 +178,7 @@ function NavLink({
   const isActive =
     href === "/"
       ? location === "/" || location === ""
-      : location === href || location.startsWith(href + "/");
+      : location === href || (location.startsWith(href + "/") && (href !== "/posts" || !location.startsWith("/posts/new")));
 
   return (
     <Link href={href} className="no-underline block">

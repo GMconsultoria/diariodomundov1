@@ -6,4 +6,6 @@ export const ENV = {
   ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
   isProduction: process.env.NODE_ENV === "production",
   baseUrl: process.env.BASE_URL?.replace(/\/+$/, "") ?? "",
+  forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
+  forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
 };
