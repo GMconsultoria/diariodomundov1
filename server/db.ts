@@ -100,11 +100,12 @@ export async function updateUserRole(userId: number, role: "admin" | "editor" | 
   if (!db) throw new Error("Database not available");
   try {
     console.log(`[Database] Updating user ${userId} to role ${role}...`);
-    const result = await db.update(users).set({ role }).where(eq(users.id, userId));
-    console.log(`[Database] Update successful for user ${userId}:`, result);
+    // Using raw SQL for the update to bypass potential enum binding issues in some MySQL environments
+    const query = sql`UPDATE users SET role = ${role} WHERE id = ${userId}`;
+    await db.execute(query);
+    console.log(`[Database] Update successful for user ${userId}`);
   } catch (error: any) {
     console.error(`[Database] Failed to update user role for ID ${userId}. Error: ${error.message}`);
-    console.error(`[Database] Full error context:`, error);
     throw error;
   }
 }
@@ -279,17 +280,17 @@ export async function getDashboardStats() {
   try {
     console.log("[Database] Fetching dashboard stats...");
     
-    // Basic counters with explicit casting to handle empty tables
+    // Basic counters
     const [counts] = await db.select({
-      totalPosts: sql<number>`CAST(COUNT(*) AS UNSIGNED)`,
-      totalViews: sql<number>`CAST(COALESCE(SUM(${posts.views}), 0) AS UNSIGNED)`,
+      totalPosts: sql<number>`COUNT(*)`,
+      totalViews: sql<number>`COALESCE(SUM(${posts.views}), 0)`,
     }).from(posts);
 
     const [totalUsers] = await db.select({ 
-      count: sql<number>`CAST(COUNT(*) AS UNSIGNED)` 
+      count: sql<number>`COUNT(*)` 
     }).from(users);
 
-    // Views by day (last 30 days) - Simplified for MySQL compatibility
+    // Views by day (last 30 days) - Using GROUP BY 1 for maximum MySQL compatibility
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -299,8 +300,8 @@ export async function getDashboardStats() {
     })
     .from(postViews)
     .where(gte(postViews.viewedAt, thirtyDaysAgo))
-    .groupBy(sql`DATE(${postViews.viewedAt})`)
-    .orderBy(sql`DATE(${postViews.viewedAt})`);
+    .groupBy(sql`1`)
+    .orderBy(sql`1`);
 
     // Views by category
     const viewsByCategory = await db.select({
@@ -308,15 +309,15 @@ export async function getDashboardStats() {
       count: sql<number>`SUM(${posts.views})`,
     })
     .from(posts)
-    .groupBy(posts.category);
+    .groupBy(sql`1`);
 
-    // Top 5 authors by post count
+    // Top 5 authors
     const topAuthors = await db.select({
       author: posts.author,
       count: sql<number>`COUNT(*)`,
     })
     .from(posts)
-    .groupBy(posts.author)
+    .groupBy(sql`1`)
     .orderBy(desc(sql`COUNT(*)`))
     .limit(5);
 
