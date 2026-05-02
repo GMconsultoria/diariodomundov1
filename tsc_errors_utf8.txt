@@ -1,0 +1,10 @@
+﻿
+> diario-do-mundo@1.0.0 check
+> tsc --noEmit
+
+client/src/pages/admin/AdminCreatePost.tsx(27,19): error TS2345: Argument of type '(prev: { title: string; subtitle: string; content: string; category: "Pol├¡tica"; author: string; imageUrl: string; imageKey: string; published: boolean; }) => { author: string | null; title: string; ... 5 more ...; published: boolean; }' is not assignable to parameter of type 'SetStateAction<{ title: string; subtitle: string; content: string; category: "Pol├¡tica"; author: string; imageUrl: string; imageKey: string; published: boolean; }>'.
+  Type '(prev: { title: string; subtitle: string; content: string; category: "Pol├¡tica"; author: string; imageUrl: string; imageKey: string; published: boolean; }) => { author: string | null; title: string; ... 5 more ...; published: boolean; }' is not assignable to type '(prevState: { title: string; subtitle: string; content: string; category: "Pol├¡tica"; author: string; imageUrl: string; imageKey: string; published: boolean; }) => { title: string; subtitle: string; ... 5 more ...; published: boolean; }'.
+    Call signature return types '{ author: string | null; title: string; subtitle: string; content: string; category: "Pol├¡tica"; imageUrl: string; imageKey: string; published: boolean; }' and '{ title: string; subtitle: string; content: string; category: "Pol├¡tica"; author: string; imageUrl: string; imageKey: string; published: boolean; }' are incompatible.
+      The types of 'author' are incompatible between these types.
+        Type 'string | null' is not assignable to type 'string'.
+          Type 'null' is not assignable to type 'string'.

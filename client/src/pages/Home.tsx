@@ -16,7 +16,7 @@ export default function Home() {
   const featuredPost = useMemo(() => posts?.[0] ?? null, [posts]);
 
   const categoryPosts = useMemo(() => {
-    const grouped: Record<string, Post[]> = {};
+    const grouped: Record<string, Omit<Post, 'content'>[]> = {};
     ALL_CATEGORIES.forEach(cat => { grouped[cat] = []; });
     posts?.forEach(post => {
       if (grouped[post.category]) grouped[post.category].push(post);

@@ -33,7 +33,7 @@ function createUserContext(): TrpcContext {
     email: "user@example.com",
     name: "Regular User",
     loginMethod: "manus",
-    role: "user",
+    role: "reader",
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),

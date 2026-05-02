@@ -2,6 +2,7 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Mail, Phone, MapPin } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Contact() {
   const [formData, setFormData] = useState({

@@ -3,7 +3,7 @@ import { getCategoryLink } from "@/lib/categoryUtils";
 import type { Post } from "@shared/types";
 
 interface NewsCardProps {
-  post: Post;
+  post: Omit<Post, "content"> & { content?: string };
   imageHeight?: string;
   titleSize?: string;
   showCategory?: boolean;

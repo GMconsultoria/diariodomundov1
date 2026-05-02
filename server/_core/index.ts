@@ -11,8 +11,7 @@ import { serveStatic, setupVite } from "./vite";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { ENV } from "./env";
 import * as db from "../db";
-import { getSessionCookieOptions } from "./cookies";
-import { sdk } from "./sdk";
+import { getSessionCookieOptions, sdk } from "./sdk";
 
 function getQueryParam(req: express.Request, name: string): string {
   const val = req.query[name];
@@ -119,7 +118,6 @@ async function startServer() {
         openId: googleUser.id,
         name: googleUser.name,
         email: googleUser.email,
-        avatar: googleUser.picture,
         loginMethod: "google",
         lastSignedIn: new Date()
       });

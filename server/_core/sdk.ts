@@ -173,3 +173,12 @@ class SDKServer {
 }
 
 export const sdk = new SDKServer();
+
+export function getSessionCookieOptions(req?: Request) {
+  return {
+    httpOnly: true,
+    secure: ENV.isProduction,
+    sameSite: "lax" as const,
+    path: "/",
+  };
+}

@@ -24,7 +24,7 @@ export default function AdminCreatePost() {
   // Auto-fill author from logged-in user
   useEffect(() => {
     if (user?.name && !formData.author) {
-      setFormData(prev => ({ ...prev, author: user.name }));
+      setFormData(prev => ({ ...prev, author: user.name || "" }));
     }
   }, [user]);
 

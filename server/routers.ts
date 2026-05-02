@@ -1,5 +1,5 @@
 import { COOKIE_NAME, CATEGORIES } from "@shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
+import { getSessionCookieOptions } from "./_core/sdk";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, adminProcedure, editorProcedure } from "./_core/trpc";
 import { fileTypeFromBuffer } from "file-type";
