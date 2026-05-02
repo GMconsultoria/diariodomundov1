@@ -1,5 +1,5 @@
 import { trpc } from "@/lib/trpc";
-import { Loader2, Shield, User, Edit2, Check } from "lucide-react";
+import { Loader2, Shield, User, Edit2, Check, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -10,13 +10,31 @@ export default function AdminUsersList() {
     onSuccess: () => {
       toast.success("Cargo atualizado com sucesso!");
       utils.admin.users.getAll.invalidate();
+    },
+    onError: (error) => {
+      toast.error("Falha ao atualizar cargo", {
+        description: error.message || "Tente novamente",
+        icon: <AlertCircle className="text-red-500" />
+      });
     }
   });
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [pendingRole, setPendingRole] = useState<"admin" | "editor" | "reader" | null>(null);
+  const [isRefetching, setIsRefetching] = useState(false);
 
-  const refetch = () => utils.admin.users.getAll.invalidate();
+  const refetch = async () => {
+    setIsRefetching(true);
+    try {
+      await utils.admin.users.getAll.refetch();
+      toast.success("Lista de usuários atualizada!");
+    } catch (error) {
+      toast.error("Erro ao atualizar lista de usuários");
+      console.error(error);
+    } finally {
+      setIsRefetching(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -31,9 +49,13 @@ export default function AdminUsersList() {
       setEditingId(null);
       return;
     }
-    await updateRoleMutation.mutateAsync({ userId, role: pendingRole });
-    setEditingId(null);
-    setPendingRole(null);
+    try {
+      await updateRoleMutation.mutateAsync({ userId, role: pendingRole });
+      setEditingId(null);
+      setPendingRole(null);
+    } catch (error) {
+      console.error("Erro ao atualizar cargo:", error);
+    }
   };
 
   const startEditing = (user: any) => {
@@ -50,9 +72,11 @@ export default function AdminUsersList() {
         </div>
         <button 
           onClick={refetch}
-          className="px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors text-sm font-semibold border border-border"
+          disabled={isRefetching}
+          className="px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors text-sm font-semibold border border-border disabled:opacity-50 flex items-center gap-2"
         >
-          Atualizar Lista
+          {isRefetching && <Loader2 className="animate-spin" size={16} />}
+          {isRefetching ? "Atualizando..." : "Atualizar Lista"}
         </button>
       </div>
 
@@ -100,9 +124,7 @@ export default function AdminUsersList() {
                     </span>
                   )}
                 </td>
-                <td className="py-4 px-6 text-sm text-muted-foreground">
-                  {new Date(user.createdAt).toLocaleDateString('pt-BR')}
-                </td>
+
                 <td className="py-4 px-6 text-right">
                   <button
                     onClick={() => editingId === user.id ? handleUpdateRole(user.id) : startEditing(user)}

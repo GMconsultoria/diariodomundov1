@@ -36,7 +36,7 @@ export default function AdminCreatePost() {
         description: "O conteúdo já está disponível no portal.",
         icon: <CheckCircle2 className="text-green-500" />
       });
-      setLocation("/admin/posts");
+      setLocation("/posts");
     },
     onError: (error) => {
       toast.error("Erro ao criar notícia", {
@@ -263,7 +263,7 @@ export default function AdminCreatePost() {
             </button>
             <button
               type="button"
-              onClick={() => setLocation("/admin/posts")}
+              onClick={() => setLocation("/posts")}
               className="px-8 py-4 bg-muted text-foreground rounded-xl hover:bg-border transition-all font-bold"
             >
               Descartar

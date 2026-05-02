@@ -3,12 +3,12 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, BarChart, Bar
 } from "recharts";
-import { Loader2, Users, Eye, FileText as FileTextIcon, TrendingUp } from "lucide-react";
+import { Loader2, Users, Eye, FileText as FileTextIcon, TrendingUp, AlertCircle, RotateCw } from "lucide-react";
 
 const COLORS = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
 
 export default function AdminDashboard() {
-  const { data: stats, isLoading } = trpc.admin.getStats.useQuery();
+  const { data: stats, isLoading, error, refetch } = trpc.admin.getStats.useQuery();
 
   if (isLoading) {
     return (
@@ -18,7 +18,26 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!stats) return null;
+  if (error || !stats) {
+    return (
+      <div className="p-8 flex flex-col items-center justify-center min-h-[400px] text-center">
+        <div className="bg-red-50 p-8 rounded-xl max-w-md">
+          <AlertCircle size={48} className="text-red-500 mb-4 mx-auto" />
+          <h2 className="text-2xl font-bold mb-2 text-red-900">Erro ao Carregar Dashboard</h2>
+          <p className="text-red-700 mb-6">
+            {error?.message || "Não foi possível carregar as estatísticas. Tente novamente."}
+          </p>
+          <button 
+            onClick={() => refetch()}
+            className="px-6 py-3 bg-accent text-white rounded-lg hover:bg-red-700 transition-all font-bold flex items-center justify-center gap-2 mx-auto"
+          >
+            <RotateCw size={18} />
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const summaryCards = [
     { title: "Total de Notícias", value: stats.summary.totalPosts, icon: FileTextIcon, color: "text-blue-600" },

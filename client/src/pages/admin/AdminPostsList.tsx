@@ -24,6 +24,7 @@ export default function AdminPostsList() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [category, setCategory] = useState("");
   const [author, setAuthor] = useState("");
+  const [isRefetching, setIsRefetching] = useState(false);
 
   // Debounce search to avoid "flashing" on every keystroke
   useEffect(() => {
@@ -73,6 +74,19 @@ export default function AdminPostsList() {
     });
   };
 
+  const handleRefresh = async () => {
+    setIsRefetching(true);
+    try {
+      await refetch();
+      toast.success("Notícias atualizadas!");
+    } catch (error) {
+      toast.error("Erro ao atualizar notícias");
+      console.error(error);
+    } finally {
+      setIsRefetching(false);
+    }
+  };
+
   if (isLoading && page === 0) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[400px]">
@@ -90,12 +104,14 @@ export default function AdminPostsList() {
         </div>
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => refetch()}
-            className="px-4 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors text-sm font-semibold border border-border"
+            onClick={handleRefresh}
+            disabled={isRefetching}
+            className="px-4 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors text-sm font-semibold border border-border disabled:opacity-50 flex items-center gap-2"
           >
-            Atualizar
+            {isRefetching && <Loader2 className="animate-spin" size={16} />}
+            {isRefetching ? "Atualizando..." : "Atualizar"}
           </button>
-          <Link href="/admin/posts/new" className="no-underline">
+          <Link href="/posts/new" className="no-underline">
             <button className="px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-red-700 transition-colors font-bold shadow-lg shadow-accent/20">
               + Nova Notícia
             </button>
@@ -199,7 +215,7 @@ export default function AdminPostsList() {
                         >
                           {post.published ? <Eye size={18} className="text-green-600" /> : <EyeOff size={18} className="text-gray-400" />}
                         </button>
-                        <Link href={`/admin/posts/${post.id}/edit`} className="p-2 hover:bg-muted rounded-lg transition-colors text-blue-600">
+                        <Link href={`/posts/${post.id}/edit`} className="p-2 hover:bg-muted rounded-lg transition-colors text-blue-600">
                           <Edit size={18} />
                         </Link>
                         <button

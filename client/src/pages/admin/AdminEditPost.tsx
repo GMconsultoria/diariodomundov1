@@ -6,7 +6,7 @@ import { CATEGORIES } from "@shared/const";
 import { toast } from "sonner";
 
 export default function AdminEditPost() {
-  const [match, params] = useRoute("/admin/posts/:id/edit");
+  const [match, params] = useRoute("/posts/:id/edit");
   const [, setLocation] = useLocation();
   const postId = params?.id ? parseInt(params.id) : null;
 
@@ -29,7 +29,7 @@ export default function AdminEditPost() {
         description: "A notícia foi atualizada com sucesso.",
         icon: <CheckCircle2 className="text-green-500" />
       });
-      setLocation("/admin/posts");
+      setLocation("/posts");
     },
     onError: (error) => {
       toast.error("Falha ao salvar", {
@@ -269,7 +269,7 @@ export default function AdminEditPost() {
             </button>
             <button
               type="button"
-              onClick={() => setLocation("/admin/posts")}
+              onClick={() => setLocation("/posts")}
               className="px-8 py-4 bg-muted text-foreground rounded-xl hover:bg-border transition-all font-bold"
             >
               Cancelar
