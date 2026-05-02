@@ -101,7 +101,7 @@ export async function updateUserRole(userId: number, role: "admin" | "editor" | 
   try {
     console.log(`[Database] Updating user ${userId} to role ${role}...`);
     // Using raw SQL for the update to bypass potential enum binding issues in some MySQL environments
-    const query = sql`UPDATE users SET role = ${role} WHERE id = ${userId}`;
+    const query = sql`UPDATE \`users\` SET \`role\` = ${role} WHERE \`id\` = ${userId}`;
     await db.execute(query);
     console.log(`[Database] Update successful for user ${userId}`);
   } catch (error: any) {
