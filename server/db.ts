@@ -232,13 +232,14 @@ export async function searchPosts(query: string, limit: number = 50): Promise<an
     .limit(limit);
 }
 
-export async function getAllPostsAdmin(limit: number = 100, offset: number = 0, category?: string, search?: string) {
+export async function getAllPostsAdmin(limit: number = 100, offset: number = 0, category?: string, search?: string, author?: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
   let conditions = [];
   if (category) conditions.push(eq(posts.category, category as any));
   if (search) conditions.push(like(posts.title, `%${search}%`));
+  if (author) conditions.push(like(posts.author, `%${author}%`));
 
   return await db
     .select({
@@ -268,13 +269,17 @@ export async function getDashboardStats() {
   if (!db) throw new Error("Database not available");
 
   try {
-    // Basic counters
+    console.log("[Database] Fetching dashboard stats...");
+    
+    // Basic counters with explicit casting to handle empty tables
     const [counts] = await db.select({
-      totalPosts: sql<number>`COUNT(*)`,
-      totalViews: sql<number>`CAST(SUM(${posts.views}) AS UNSIGNED)`,
+      totalPosts: sql<number>`CAST(COUNT(*) AS UNSIGNED)`,
+      totalViews: sql<number>`CAST(COALESCE(SUM(${posts.views}), 0) AS UNSIGNED)`,
     }).from(posts);
 
-    const [totalUsers] = await db.select({ count: sql<number>`COUNT(*)` }).from(users);
+    const [totalUsers] = await db.select({ 
+      count: sql<number>`CAST(COUNT(*) AS UNSIGNED)` 
+    }).from(users);
 
     // Views by day (last 30 days)
     const thirtyDaysAgo = new Date();
@@ -282,7 +287,7 @@ export async function getDashboardStats() {
 
     const viewsByDay = await db.select({
       day: sql<string>`DATE(${postViews.viewedAt})`,
-      count: sql<number>`COUNT(*)`,
+      count: sql<number>`CAST(COUNT(*) AS UNSIGNED)`,
     })
     .from(postViews)
     .where(gte(postViews.viewedAt, thirtyDaysAgo))
@@ -297,6 +302,16 @@ export async function getDashboardStats() {
     .from(posts)
     .groupBy(posts.category);
 
+    // Top 5 authors by post count
+    const topAuthors = await db.select({
+      author: posts.author,
+      count: sql<number>`CAST(COUNT(*) AS UNSIGNED)`,
+    })
+    .from(posts)
+    .groupBy(posts.author)
+    .orderBy(desc(sql`COUNT(*)`))
+    .limit(5);
+
     // Top 10 most viewed posts
     const topPosts = await db.select({
       id: posts.id,
@@ -308,16 +323,32 @@ export async function getDashboardStats() {
     .orderBy(desc(posts.views))
     .limit(10);
 
-    return {
+    const result = {
       summary: {
         totalPosts: Number(counts?.totalPosts || 0),
         totalViews: Number(counts?.totalViews || 0),
         totalUsers: Number(totalUsers?.count || 0),
       },
-      viewsByDay: viewsByDay || [],
-      viewsByCategory: viewsByCategory || [],
-      topPosts: topPosts || [],
+      viewsByDay: (viewsByDay || []).map(v => ({
+        day: String(v.day || ""),
+        count: Number(v.count || 0)
+      })).filter(v => v.day),
+      viewsByCategory: (viewsByCategory || []).map(v => ({
+        category: String(v.category || "Geral"),
+        count: Number(v.count || 0)
+      })),
+      topAuthors: (topAuthors || []).map(a => ({
+        author: String(a.author || "Anônimo"),
+        count: Number(a.count || 0)
+      })),
+      topPosts: (topPosts || []).map(p => ({
+        ...p,
+        views: Number(p.views || 0)
+      })),
     };
+    
+    console.log("[Database] Dashboard stats fetched successfully");
+    return result;
   } catch (error) {
     console.error("[Database] getDashboardStats error:", error);
     throw error;

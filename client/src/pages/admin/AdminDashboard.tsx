@@ -59,12 +59,24 @@ export default function AdminDashboard() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis 
                   dataKey="day" 
-                  tickFormatter={(val) => new Date(val).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                  tickFormatter={(val) => {
+                    try {
+                      return new Date(val).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+                    } catch (e) {
+                      return val;
+                    }
+                  }}
                   fontSize={12}
                 />
                 <YAxis fontSize={12} />
                 <Tooltip 
-                  labelFormatter={(val) => new Date(val).toLocaleDateString('pt-BR')}
+                  labelFormatter={(val) => {
+                    try {
+                      return new Date(val).toLocaleDateString('pt-BR');
+                    } catch (e) {
+                      return val;
+                    }
+                  }}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                 />
                 <Line 
@@ -74,6 +86,7 @@ export default function AdminDashboard() {
                   strokeWidth={3} 
                   dot={{ r: 4, fill: "#ef4444" }}
                   activeDot={{ r: 6 }}
+                  name="Visualizações"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -108,34 +121,49 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Top Posts Table */}
-      <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
-        <h3 className="text-xl font-bold mb-6">Top 10 Notícias Mais Visualizadas</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="py-3 font-semibold text-muted-foreground">Posição</th>
-                <th className="py-3 font-semibold text-muted-foreground">Título</th>
-                <th className="py-3 font-semibold text-muted-foreground">Categoria</th>
-                <th className="py-3 font-semibold text-muted-foreground text-right">Visualizações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {stats.topPosts.map((post, index) => (
-                <tr key={post.id} className="hover:bg-muted/50 transition-colors">
-                  <td className="py-4 font-bold text-muted-foreground">#{index + 1}</td>
-                  <td className="py-4 font-semibold max-w-md truncate">{post.title}</td>
-                  <td className="py-4">
-                    <span className="px-2 py-1 bg-accent/10 text-accent text-xs font-bold rounded-full border border-accent/20">
-                      {post.category}
-                    </span>
-                  </td>
-                  <td className="py-4 text-right font-mono font-bold">{post.views.toLocaleString()}</td>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Top Authors Bar Chart */}
+        <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
+          <h3 className="text-xl font-bold mb-6">Produção por Autor (Top 5)</h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats.topAuthors} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" fontSize={12} />
+                <YAxis dataKey="author" type="category" fontSize={12} width={120} />
+                <Tooltip 
+                  cursor={{fill: 'transparent'}}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                />
+                <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} name="Notícias" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Top Posts Table */}
+        <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
+          <h3 className="text-xl font-bold mb-6">Top 10 Notícias Mais Visualizadas</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="py-3 font-semibold text-muted-foreground">Posição</th>
+                  <th className="py-3 font-semibold text-muted-foreground">Título</th>
+                  <th className="py-3 font-semibold text-muted-foreground text-right">Visualizações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {stats.topPosts.slice(0, 5).map((post, index) => (
+                  <tr key={post.id} className="hover:bg-muted/50 transition-colors text-sm">
+                    <td className="py-3 font-bold text-muted-foreground">#{index + 1}</td>
+                    <td className="py-3 font-semibold max-w-[200px] truncate">{post.title}</td>
+                    <td className="py-3 text-right font-mono font-bold text-accent">{post.views.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

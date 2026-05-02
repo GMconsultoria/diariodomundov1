@@ -4,16 +4,19 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export default function AdminUsersList() {
-  const { data: users, isLoading, refetch } = trpc.admin.users.getAll.useQuery();
+  const utils = trpc.useUtils();
+  const { data: users, isLoading } = trpc.admin.users.getAll.useQuery();
   const updateRoleMutation = trpc.admin.users.updateRole.useMutation({
     onSuccess: () => {
       toast.success("Cargo atualizado com sucesso!");
-      refetch();
+      utils.admin.users.getAll.invalidate();
     }
   });
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [pendingRole, setPendingRole] = useState<"admin" | "editor" | "reader" | null>(null);
+
+  const refetch = () => utils.admin.users.getAll.invalidate();
 
   if (isLoading) {
     return (
@@ -40,9 +43,17 @@ export default function AdminUsersList() {
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-4xl font-bold mb-2">Usuários</h1>
-        <p className="text-muted-foreground">Gerencie as permissões de acesso ao portal</p>
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Gerenciar Usuários</h1>
+          <p className="text-muted-foreground">Administre os cargos e permissões dos membros da equipe</p>
+        </div>
+        <button 
+          onClick={refetch}
+          className="px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors text-sm font-semibold border border-border"
+        >
+          Atualizar Lista
+        </button>
       </div>
 
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
@@ -52,7 +63,6 @@ export default function AdminUsersList() {
               <th className="py-4 px-6 font-semibold text-sm">Usuário</th>
               <th className="py-4 px-6 font-semibold text-sm">E-mail</th>
               <th className="py-4 px-6 font-semibold text-sm">Cargo</th>
-              <th className="py-4 px-6 font-semibold text-sm">Desde</th>
               <th className="py-4 px-6 font-semibold text-sm text-right">Ações</th>
             </tr>
           </thead>

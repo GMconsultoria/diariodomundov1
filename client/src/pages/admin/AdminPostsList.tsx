@@ -1,7 +1,7 @@
 import { trpc } from "@/lib/trpc";
 import { Loader2, Edit, Trash2, Eye, EyeOff, Search, Filter } from "lucide-react";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CATEGORIES } from "@shared/const";
 import {
   AlertDialog,
@@ -14,19 +14,33 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { User } from "lucide-react";
 
 const PAGE_SIZE = 15;
 
 export default function AdminPostsList() {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [category, setCategory] = useState("");
+  const [author, setAuthor] = useState("");
+
+  // Debounce search to avoid "flashing" on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const { data: posts, isLoading, refetch } = trpc.admin.posts.getAll.useQuery({
     limit: PAGE_SIZE,
     offset: page * PAGE_SIZE,
     category: category || undefined,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
+    author: author || undefined,
+  }, {
+    placeholderData: (previousData) => previousData, // Maintain data while loading to avoid flashing
   });
 
   const deleteMutation = trpc.admin.posts.delete.useMutation({
@@ -74,11 +88,19 @@ export default function AdminPostsList() {
           <h1 className="text-4xl font-bold mb-2">Notícias</h1>
           <p className="text-muted-foreground">Gerencie o conteúdo do portal</p>
         </div>
-        <Link href="/admin/posts/new" className="no-underline">
-          <button className="px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-red-700 transition-colors font-bold shadow-lg shadow-accent/20">
-            + Nova Notícia
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => refetch()}
+            className="px-4 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors text-sm font-semibold border border-border"
+          >
+            Atualizar
           </button>
-        </Link>
+          <Link href="/admin/posts/new" className="no-underline">
+            <button className="px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-red-700 transition-colors font-bold shadow-lg shadow-accent/20">
+              + Nova Notícia
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Filters Bar */}
@@ -111,6 +133,19 @@ export default function AdminPostsList() {
               <option key={cat} value={cat}>{cat}</option>
             ))}
           </select>
+        </div>
+        <div className="relative min-w-[200px]">
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+          <input
+            type="text"
+            placeholder="Filtrar por autor..."
+            className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-lg focus:outline-none focus:border-accent text-sm"
+            value={author}
+            onChange={(e) => {
+              setAuthor(e.target.value);
+              setPage(0);
+            }}
+          />
         </div>
       </div>
 

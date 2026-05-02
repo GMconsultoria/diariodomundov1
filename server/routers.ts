@@ -118,9 +118,10 @@ export const appRouter = router({
           offset: z.number().default(0),
           category: z.string().optional(),
           search: z.string().optional(),
+          author: z.string().optional(),
         }))
         .query(async ({ input }) => {
-          return await getAllPostsAdmin(input.limit, input.offset, input.category, input.search);
+          return await getAllPostsAdmin(input.limit, input.offset, input.category, input.search, input.author);
         }),
 
       create: editorProcedure
