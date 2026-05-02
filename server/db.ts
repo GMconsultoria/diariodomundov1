@@ -306,24 +306,30 @@ export async function getDashboardStats() {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const rawViews = await db.select({
-      viewedAt: postViews.viewedAt,
-    })
-    .from(postViews)
-    .where(gte(postViews.viewedAt, thirtyDaysAgo));
+    let viewsByDay: { day: string; count: number }[] = [];
+    try {
+      const rawViews = await db.select({
+        viewedAt: postViews.viewedAt,
+      })
+      .from(postViews)
+      .where(gte(postViews.viewedAt, thirtyDaysAgo));
 
-    // Group in JS to avoid SQL dialect issues
-    const viewsByDayMap = new Map<string, number>();
-    rawViews.forEach(v => {
-      if (v.viewedAt) {
-        const dateKey = v.viewedAt.toISOString().split('T')[0];
-        viewsByDayMap.set(dateKey, (viewsByDayMap.get(dateKey) || 0) + 1);
-      }
-    });
-    
-    const viewsByDay = Array.from(viewsByDayMap.entries())
-      .map(([day, count]) => ({ day, count }))
-      .sort((a, b) => a.day.localeCompare(b.day));
+      // Group in JS to avoid SQL dialect issues
+      const viewsByDayMap = new Map<string, number>();
+      rawViews.forEach(v => {
+        if (v.viewedAt) {
+          const dateKey = v.viewedAt.toISOString().split('T')[0];
+          viewsByDayMap.set(dateKey, (viewsByDayMap.get(dateKey) || 0) + 1);
+        }
+      });
+      
+      viewsByDay = Array.from(viewsByDayMap.entries())
+        .map(([day, count]) => ({ day, count }))
+        .sort((a, b) => a.day.localeCompare(b.day));
+    } catch (e) {
+      console.error("[Database] Failed to fetch post_views, table might be missing:", e);
+      // Don't throw, just return empty viewsByDay
+    }
 
     // Views by category
     const rawCategoryViews = await db.select({

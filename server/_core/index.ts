@@ -52,6 +52,27 @@ async function startServer() {
     res.json({ version: "v1.2.3-final-test-001" });
   });
 
+  app.get("/api/debug-db", async (req, res) => {
+    const db = await db.getDb();
+    if (!db) return res.json({ error: "No DB connection" });
+    try {
+      const tables: any = await db.execute(sql`SHOW TABLES`);
+      const schema: Record<string, any> = {};
+      
+      // Extract table names
+      const tableNames = tables[0].map((t: any) => Object.values(t)[0]);
+      
+      for (const name of tableNames) {
+        const columns: any = await db.execute(sql.raw(`DESCRIBE \`${name}\``));
+        schema[name] = columns[0];
+      }
+      
+      res.json({ tables: tableNames, schema });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   registerStorageProxy(app);
 
   // OAuth Routes (Native Google OAuth 2.0)
