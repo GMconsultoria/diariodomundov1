@@ -54,10 +54,10 @@ async function startServer() {
   const loginHandler = (req: express.Request, res: express.Response) => {
     console.log(`[OAuth] Login request received: ${req.url}`);
     try {
-      const clientId = process.env.GOOGLE_CLIENT_ID;
+      const clientId = ENV.googleClientId;
       
       if (!clientId) {
-        console.error("[OAuth] Missing GOOGLE_CLIENT_ID environment variable.");
+        console.error("[OAuth] Missing GOOGLE_CLIENT_ID in ENV.");
         return res.status(500).json({ 
           error: "Login configuration error",
           details: "O administrador precisa configurar o GOOGLE_CLIENT_ID no servidor."
@@ -86,9 +86,8 @@ async function startServer() {
     }
   };
 
+  app.get("/api/auth/login", loginHandler);
   app.get("/api/auth-login", loginHandler);
-  app.get("/api/auth-login/", loginHandler);
-
   app.get("/api/oauth/callback", async (req: express.Request, res: express.Response) => {
     console.log(`[OAuth] Callback received: ${req.url}`);
     const code = getQueryParam(req, "code");
@@ -101,8 +100,8 @@ async function startServer() {
 
       // 1. Exchange code for Google Access Token
       const tokenResponse = await axios.post("https://oauth2.googleapis.com/token", {
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        client_id: ENV.googleClientId,
+        client_secret: ENV.googleClientSecret,
         code,
         grant_type: "authorization_code",
         redirect_uri: redirectUri
