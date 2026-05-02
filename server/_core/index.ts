@@ -53,17 +53,17 @@ async function startServer() {
   });
 
   app.get("/api/debug-db", async (req, res) => {
-    const db = await db.getDb();
-    if (!db) return res.json({ error: "No DB connection" });
+    const database = await db.getDb();
+    if (!database) return res.json({ error: "No DB connection" });
     try {
-      const tables: any = await db.execute(sql`SHOW TABLES`);
+      const tables: any = await database.execute(sql`SHOW TABLES`);
       const schema: Record<string, any> = {};
       
       // Extract table names
       const tableNames = tables[0].map((t: any) => Object.values(t)[0]);
       
       for (const name of tableNames) {
-        const columns: any = await db.execute(sql.raw(`DESCRIBE \`${name}\``));
+        const columns: any = await database.execute(sql.raw(`DESCRIBE \`${name}\``));
         schema[name] = columns[0];
       }
       
