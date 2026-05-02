@@ -101,9 +101,10 @@ export async function updateUserRole(userId: number, role: "admin" | "editor" | 
   try {
     console.log(`[Database] Updating user ${userId} to role ${role}...`);
     const result = await db.update(users).set({ role }).where(eq(users.id, userId));
-    console.log(`[Database] Update successful:`, result);
-  } catch (error) {
-    console.error(`[Database] Failed to update user role for ID ${userId}:`, error);
+    console.log(`[Database] Update successful for user ${userId}:`, result);
+  } catch (error: any) {
+    console.error(`[Database] Failed to update user role for ID ${userId}. Error: ${error.message}`);
+    console.error(`[Database] Full error context:`, error);
     throw error;
   }
 }
@@ -293,7 +294,7 @@ export async function getDashboardStats() {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const viewsByDay = await db.select({
-      day: sql<string>`DATE_FORMAT(${postViews.viewedAt}, '%Y-%m-%d')`,
+      day: sql<string>`DATE(${postViews.viewedAt})`,
       count: sql<number>`COUNT(*)`,
     })
     .from(postViews)
