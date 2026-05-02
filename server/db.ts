@@ -98,7 +98,14 @@ export async function getAllUsers() {
 export async function updateUserRole(userId: number, role: "admin" | "editor" | "reader") {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(users).set({ role }).where(eq(users.id, userId));
+  try {
+    console.log(`[Database] Updating user ${userId} to role ${role}...`);
+    const result = await db.update(users).set({ role }).where(eq(users.id, userId));
+    console.log(`[Database] Update successful:`, result);
+  } catch (error) {
+    console.error(`[Database] Failed to update user role for ID ${userId}:`, error);
+    throw error;
+  }
 }
 
 // Posts queries
@@ -281,13 +288,13 @@ export async function getDashboardStats() {
       count: sql<number>`CAST(COUNT(*) AS UNSIGNED)` 
     }).from(users);
 
-    // Views by day (last 30 days)
+    // Views by day (last 30 days) - Simplified for MySQL compatibility
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const viewsByDay = await db.select({
-      day: sql<string>`DATE(${postViews.viewedAt})`,
-      count: sql<number>`CAST(COUNT(*) AS UNSIGNED)`,
+      day: sql<string>`DATE_FORMAT(${postViews.viewedAt}, '%Y-%m-%d')`,
+      count: sql<number>`COUNT(*)`,
     })
     .from(postViews)
     .where(gte(postViews.viewedAt, thirtyDaysAgo))
@@ -297,7 +304,7 @@ export async function getDashboardStats() {
     // Views by category
     const viewsByCategory = await db.select({
       category: posts.category,
-      count: sql<number>`CAST(SUM(${posts.views}) AS UNSIGNED)`,
+      count: sql<number>`SUM(${posts.views})`,
     })
     .from(posts)
     .groupBy(posts.category);
@@ -305,7 +312,7 @@ export async function getDashboardStats() {
     // Top 5 authors by post count
     const topAuthors = await db.select({
       author: posts.author,
-      count: sql<number>`CAST(COUNT(*) AS UNSIGNED)`,
+      count: sql<number>`COUNT(*)`,
     })
     .from(posts)
     .groupBy(posts.author)

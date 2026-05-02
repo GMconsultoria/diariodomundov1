@@ -75,10 +75,10 @@ export default function AdminLayout() {
           {/* Header */}
           <div className="p-6 border-b border-border flex items-center justify-between">
             {sidebarOpen && (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-accent rounded flex items-center justify-center text-white font-bold">D</div>
+              <a href="/" className="flex items-center gap-2 no-underline text-foreground hover:opacity-80 transition-opacity">
+                <div className="w-8 h-8 bg-accent rounded flex items-center justify-center text-white font-bold shadow-lg shadow-accent/20">D</div>
                 <span className="font-bold text-lg tracking-tight">Painel</span>
-              </div>
+              </a>
             )}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
