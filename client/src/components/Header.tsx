@@ -91,7 +91,7 @@ export default function Header() {
                       </div>
                       
                       {user?.role === "admin" && (
-                        <Link href="/admin" className="no-underline block px-4 py-2 text-sm text-white hover:bg-gray-700 transition-colors">
+                        <Link href="/admin/" className="no-underline block px-4 py-2 text-sm text-white hover:bg-gray-700 transition-colors">
                           Acessar Painel Admin
                         </Link>
                       )}
@@ -195,7 +195,7 @@ export default function Header() {
                   </div>
                   
                   {user?.role === "admin" && (
-                    <Link href="/admin" className="no-underline block px-4 py-3 text-sm text-white hover:bg-gray-800 transition-colors">
+                    <Link href="/admin/" className="no-underline block px-4 py-3 text-sm text-white hover:bg-gray-800 transition-colors">
                       Acessar Painel Admin
                     </Link>
                   )}
