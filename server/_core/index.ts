@@ -48,6 +48,10 @@ async function startServer() {
     res.json({ ok: true, timestamp: Date.now(), env: process.env.NODE_ENV });
   });
 
+  app.get("/api/version", (req, res) => {
+    res.json({ version: "v1.2.3-final-test-001" });
+  });
+
   registerStorageProxy(app);
 
   // OAuth Routes (Native Google OAuth 2.0)
