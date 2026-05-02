@@ -290,36 +290,59 @@ export async function getDashboardStats() {
       count: sql<number>`COUNT(*)` 
     }).from(users);
 
-    // Views by day (last 30 days) - Using GROUP BY 1 for maximum MySQL compatibility
+    // Views by day (last 30 days) - Failsafe: Fetch and group in JS
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const viewsByDay = await db.select({
-      day: sql<string>`DATE(${postViews.viewedAt})`,
-      count: sql<number>`COUNT(*)`,
+    const rawViews = await db.select({
+      viewedAt: postViews.viewedAt,
     })
     .from(postViews)
-    .where(gte(postViews.viewedAt, thirtyDaysAgo))
-    .groupBy(sql`1`)
-    .orderBy(sql`1`);
+    .where(gte(postViews.viewedAt, thirtyDaysAgo));
+
+    // Group in JS to avoid SQL dialect issues
+    const viewsByDayMap = new Map<string, number>();
+    rawViews.forEach(v => {
+      if (v.viewedAt) {
+        const dateKey = v.viewedAt.toISOString().split('T')[0];
+        viewsByDayMap.set(dateKey, (viewsByDayMap.get(dateKey) || 0) + 1);
+      }
+    });
+    
+    const viewsByDay = Array.from(viewsByDayMap.entries())
+      .map(([day, count]) => ({ day, count }))
+      .sort((a, b) => a.day.localeCompare(b.day));
 
     // Views by category
-    const viewsByCategory = await db.select({
+    const rawCategoryViews = await db.select({
       category: posts.category,
-      count: sql<number>`SUM(${posts.views})`,
-    })
-    .from(posts)
-    .groupBy(sql`1`);
+      views: posts.views,
+    }).from(posts);
+
+    const categoryMap = new Map<string, number>();
+    rawCategoryViews.forEach(p => {
+      const cat = p.category || "Geral";
+      categoryMap.set(cat, (categoryMap.get(cat) || 0) + (p.views || 0));
+    });
+
+    const viewsByCategory = Array.from(categoryMap.entries())
+      .map(([category, count]) => ({ category, count }));
 
     // Top 5 authors
-    const topAuthors = await db.select({
+    const rawAuthors = await db.select({
       author: posts.author,
-      count: sql<number>`COUNT(*)`,
-    })
-    .from(posts)
-    .groupBy(sql`1`)
-    .orderBy(desc(sql`COUNT(*)`))
-    .limit(5);
+    }).from(posts);
+
+    const authorMap = new Map<string, number>();
+    rawAuthors.forEach(p => {
+      const auth = p.author || "Anônimo";
+      authorMap.set(auth, (authorMap.get(auth) || 0) + 1);
+    });
+
+    const topAuthors = Array.from(authorMap.entries())
+      .map(([author, count]) => ({ author, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
 
     // Top 10 most viewed posts
     const topPosts = await db.select({
@@ -338,25 +361,16 @@ export async function getDashboardStats() {
         totalViews: Number(counts?.totalViews || 0),
         totalUsers: Number(totalUsers?.count || 0),
       },
-      viewsByDay: (viewsByDay || []).map(v => ({
-        day: String(v.day || ""),
-        count: Number(v.count || 0)
-      })).filter(v => v.day),
-      viewsByCategory: (viewsByCategory || []).map(v => ({
-        category: String(v.category || "Geral"),
-        count: Number(v.count || 0)
-      })),
-      topAuthors: (topAuthors || []).map(a => ({
-        author: String(a.author || "Anônimo"),
-        count: Number(a.count || 0)
-      })),
+      viewsByDay,
+      viewsByCategory,
+      topAuthors,
       topPosts: (topPosts || []).map(p => ({
         ...p,
         views: Number(p.views || 0)
       })),
     };
     
-    console.log("[Database] Dashboard stats fetched successfully");
+    console.log("[Database] Dashboard stats fetched successfully via failsafe method");
     return result;
   } catch (error) {
     console.error("[Database] getDashboardStats error:", error);
@@ -368,8 +382,12 @@ export async function incrementPostViews(id: number): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  await db.transaction(async (tx) => {
-    await tx.update(posts).set({ views: sql`${posts.views} + 1` }).where(eq(posts.id, id));
-    await tx.insert(postViews).values({ postId: id });
-  });
+  try {
+    await db.transaction(async (tx) => {
+      await tx.update(posts).set({ views: sql`${posts.views} + 1` }).where(eq(posts.id, id));
+      await tx.insert(postViews).values({ postId: id });
+    });
+  } catch (error) {
+    console.error(`[Database] Failed to increment views for post ${id}:`, error);
+  }
 }
