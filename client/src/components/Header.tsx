@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { getCategoryLink } from "@/lib/categoryUtils";
-import { Search } from "lucide-react";
+import { Search, ChevronDown, LogOut } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CATEGORIES } from "@shared/const";
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const loginUrl = "/login";
   const handleLogin = () => {
     setLocation(loginUrl);
   };
+  
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
 
   const [, setLocation] = useLocation();
 
@@ -70,16 +73,39 @@ export default function Header() {
           {/* Auth Buttons - Desktop */}
           <div className="hidden md:flex items-center gap-3 flex-shrink-0">
             {isAuthenticated ? (
-              <>
-                <span className="text-sm text-white">{user?.name}</span>
-                {user?.role === "admin" && (
-                  <Link href="/admin" className="no-underline">
-                    <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-semibold">
-                      Admin
-                    </button>
-                  </Link>
+              <div 
+                className="relative" 
+                onMouseEnter={() => setIsDropdownOpen(true)}
+                onMouseLeave={() => setIsDropdownOpen(false)}
+              >
+                <button className="flex items-center gap-2 text-sm text-white font-semibold hover:text-red-400 transition-colors">
+                  Minha Conta <ChevronDown size={16} />
+                </button>
+                
+                {isDropdownOpen && (
+                  <div className="absolute right-0 top-full pt-2 w-56 z-50">
+                    <div className="bg-gray-800 rounded-lg shadow-xl py-2 border border-gray-700">
+                      <div className="px-4 py-2 border-b border-gray-700">
+                        <p className="text-xs text-gray-400">Logado como:</p>
+                        <p className="text-sm text-white font-semibold truncate">{user?.name}</p>
+                      </div>
+                      
+                      {user?.role === "admin" && (
+                        <Link href="/admin" className="no-underline block px-4 py-2 text-sm text-white hover:bg-gray-700 transition-colors">
+                          Acessar Painel Admin
+                        </Link>
+                      )}
+                      
+                      <button 
+                        onClick={() => logout()}
+                        className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-700 transition-colors flex items-center gap-2 cursor-pointer"
+                      >
+                        <LogOut size={16} /> Sair
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </>
+              </div>
             ) : loginUrl ? (
               <button 
                 onClick={handleLogin}
@@ -153,16 +179,36 @@ export default function Header() {
         {/* Mobile Auth */}
         <div className="md:hidden px-4 pt-3 border-t border-gray-700 flex gap-2">
           {isAuthenticated ? (
-            <>
-              <span className="text-xs text-white flex-1">{user?.name}</span>
-              {user?.role === "admin" && (
-                <Link href="/admin" className="no-underline">
-                  <button className="px-3 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700 transition-colors">
-                    Admin
+            <div className="flex-1">
+              <button 
+                onClick={() => setIsMobileDropdownOpen(!isMobileDropdownOpen)}
+                className="flex items-center justify-between w-full text-sm text-white font-semibold bg-gray-800 px-4 py-2 rounded"
+              >
+                Minha Conta <ChevronDown size={16} className={`transition-transform ${isMobileDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+              
+              {isMobileDropdownOpen && (
+                <div className="mt-2 bg-gray-900 rounded-lg py-2 border border-gray-700">
+                  <div className="px-4 py-2 border-b border-gray-800">
+                    <p className="text-xs text-gray-400">Logado como:</p>
+                    <p className="text-sm text-white font-semibold truncate">{user?.name}</p>
+                  </div>
+                  
+                  {user?.role === "admin" && (
+                    <Link href="/admin" className="no-underline block px-4 py-3 text-sm text-white hover:bg-gray-800 transition-colors">
+                      Acessar Painel Admin
+                    </Link>
+                  )}
+                  
+                  <button 
+                    onClick={() => logout()}
+                    className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-gray-800 transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    <LogOut size={16} /> Sair
                   </button>
-                </Link>
+                </div>
               )}
-            </>
+            </div>
           ) : loginUrl ? (
             <button 
               onClick={handleLogin}
