@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -8,7 +9,36 @@ import { Loader2, Users, Eye, FileText as FileTextIcon, TrendingUp, AlertCircle,
 const COLORS = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
 
 export default function AdminDashboard() {
-  const { data: stats, isLoading, error, refetch } = trpc.admin.getStats.useQuery();
+  const [dateRange, setDateRange] = useState("30d");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+
+  const getFilterParams = () => {
+    const end = new Date();
+    const start = new Date();
+    
+    if (dateRange === "7d") {
+      start.setDate(end.getDate() - 7);
+    } else if (dateRange === "30d") {
+      start.setDate(end.getDate() - 30);
+    } else if (dateRange === "month") {
+      start.setDate(1); // First day of current month
+    } else if (dateRange === "custom" && customStart && customEnd) {
+      return { 
+        startDate: new Date(customStart).toISOString().split('T')[0], 
+        endDate: new Date(customEnd).toISOString().split('T')[0] 
+      };
+    } else {
+      return undefined;
+    }
+    
+    return { 
+      startDate: start.toISOString().split('T')[0], 
+      endDate: end.toISOString().split('T')[0] 
+    };
+  };
+
+  const { data: stats, isLoading, error, refetch } = trpc.admin.getStats.useQuery(getFilterParams());
 
   if (isLoading) {
     return (
@@ -48,9 +78,50 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">Visão geral do desempenho do portal</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
+          <p className="text-muted-foreground">Visão geral do desempenho do portal</p>
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-3 bg-card p-2 rounded-xl border border-border shadow-sm">
+          <select 
+            value={dateRange} 
+            onChange={(e) => setDateRange(e.target.value)}
+            className="bg-muted border-none rounded-lg px-3 py-2 text-sm font-semibold focus:ring-2 focus:ring-accent outline-none"
+          >
+            <option value="7d">Últimos 7 dias</option>
+            <option value="30d">Últimos 30 dias</option>
+            <option value="month">Mês Atual</option>
+            <option value="custom">Período Personalizado</option>
+          </select>
+          
+          {dateRange === "custom" && (
+            <div className="flex items-center gap-2 animate-in slide-in-from-right-4">
+              <input 
+                type="date" 
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+                className="bg-muted border-none rounded-lg px-2 py-1.5 text-xs font-semibold outline-none"
+              />
+              <span className="text-muted-foreground text-xs font-bold">até</span>
+              <input 
+                type="date" 
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+                className="bg-muted border-none rounded-lg px-2 py-1.5 text-xs font-semibold outline-none"
+              />
+            </div>
+          )}
+          
+          <button 
+            onClick={() => refetch()}
+            className="p-2 hover:bg-muted rounded-lg transition-colors text-accent"
+            title="Atualizar dados"
+          >
+            <RotateCw size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -71,7 +142,12 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Line Chart - Views per Day */}
         <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
-          <h3 className="text-xl font-bold mb-6">Acessos Diários (Últimos 30 dias)</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold">Acessos Diários</h3>
+            <span className="text-xs font-bold text-muted-foreground uppercase bg-muted px-2 py-1 rounded">
+              {dateRange === "7d" ? "Últimos 7 dias" : dateRange === "30d" ? "Últimos 30 dias" : dateRange === "month" ? "Mês Atual" : "Personalizado"}
+            </span>
+          </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={stats.viewsByDay}>

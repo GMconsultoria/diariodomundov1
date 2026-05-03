@@ -44,29 +44,6 @@ export default function Contact() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <div className="flex gap-4">
-              <Mail className="text-accent flex-shrink-0 mt-1" size={24} />
-              <div>
-                <h3 className="font-bold text-foreground mb-1">Email</h3>
-                <p className="text-muted-foreground">contato@diario-do-mundo.com.br</p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <Phone className="text-accent flex-shrink-0 mt-1" size={24} />
-              <div>
-                <h3 className="font-bold text-foreground mb-1">Telefone</h3>
-                <p className="text-muted-foreground">(11) 3000-0000</p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <MapPin className="text-accent flex-shrink-0 mt-1" size={24} />
-              <div>
-                <h3 className="font-bold text-foreground mb-1">Endereço</h3>
-                <p className="text-muted-foreground">São Paulo, SP - Brasil</p>
-              </div>
-            </div>
-          </div>
 
           <div className="bg-card text-card-foreground rounded-lg p-8 border border-border">
             {submitted && (

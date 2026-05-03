@@ -44,6 +44,13 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+    deleteMe: publicProcedure.mutation(async ({ ctx }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      await deleteUser(ctx.user.id);
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      return { success: true };
+    }),
   }),
 
   // Public posts routes
@@ -85,9 +92,14 @@ export const appRouter = router({
 
   // Admin and Editor routes
   admin: router({
-    getStats: adminProcedure.query(async () => {
-      return await getDashboardStats();
-    }),
+    getStats: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await getDashboardStats(input?.startDate, input?.endDate);
+      }),
 
     // User management (Admin only)
     users: router({

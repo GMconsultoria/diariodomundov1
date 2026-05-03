@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { getCategoryLink } from "@/lib/categoryUtils";
-import { Search, ChevronDown, LogOut } from "lucide-react";
+import { Search, ChevronDown, LogOut, UserX } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CATEGORIES } from "@shared/const";
 
@@ -22,6 +23,23 @@ export default function Header() {
     e.preventDefault();
     if (searchQuery.trim()) {
       setLocation(`/busca?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+  
+  const deleteMeMutation = trpc.auth.deleteMe.useMutation({
+    onSuccess: () => {
+      toast.success("Sua conta foi excluída com sucesso.");
+      logout();
+      setLocation("/");
+    },
+    onError: (err) => {
+      toast.error("Erro ao excluir conta: " + err.message);
+    },
+  });
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm("Tem certeza que deseja excluir sua conta? Esta ação é irreversível.")) {
+      await deleteMeMutation.mutateAsync();
     }
   };
 
@@ -94,6 +112,15 @@ export default function Header() {
                         <Link href="/admin/" className="no-underline block px-4 py-2 text-sm text-white hover:bg-gray-700 transition-colors">
                           Acessar Painel Admin
                         </Link>
+                      )}
+                      
+                      {user?.role === "reader" && (
+                        <button 
+                          onClick={handleDeleteAccount}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-400 hover:text-red-500 hover:bg-gray-700 transition-colors flex items-center gap-2 cursor-pointer"
+                        >
+                          <UserX size={16} /> Excluir Conta
+                        </button>
                       )}
                       
                       <button 
@@ -198,6 +225,15 @@ export default function Header() {
                     <Link href="/admin/" className="no-underline block px-4 py-3 text-sm text-white hover:bg-gray-800 transition-colors">
                       Acessar Painel Admin
                     </Link>
+                  )}
+                  
+                  {user?.role === "reader" && (
+                    <button 
+                      onClick={handleDeleteAccount}
+                      className="w-full text-left px-4 py-3 text-sm text-gray-400 hover:text-red-500 hover:bg-gray-800 transition-colors flex items-center gap-2 cursor-pointer"
+                    >
+                      <UserX size={16} /> Excluir Conta
+                    </button>
                   )}
                   
                   <button 

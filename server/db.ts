@@ -89,6 +89,12 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function deleteUser(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(users).where(eq(users.id, id));
+}
+
 export async function getAllUsers() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -273,25 +279,11 @@ export async function getAllPostsAdmin(limit: number = 100, offset: number = 0, 
     .offset(offset);
 }
 
-export async function getDashboardStats() {
+export async function getDashboardStats(startDate?: string, endDate?: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
   try {
-    console.log("[Database] Diagnostic check starting...");
-    const dbUrl = process.env.DATABASE_URL || "";
-    console.log(`[Database] Connection protocol: ${dbUrl.split(':')[0]}`);
-    
-    try {
-      const tables = await db.execute(sql`SHOW TABLES`);
-      console.log("[Database] Available tables:", JSON.stringify(tables));
-    } catch (e) {
-      console.log("[Database] SHOW TABLES failed, trying SELECT 1...");
-      await db.execute(sql`SELECT 1`);
-    }
-
-    console.log("[Database] Fetching dashboard stats...");
-    
     // Basic counters
     const [counts] = await db.select({
       totalPosts: sql<number>`COUNT(*)`,
@@ -302,9 +294,20 @@ export async function getDashboardStats() {
       count: sql<number>`COUNT(*)` 
     }).from(users);
 
-    // Views by day (last 30 days) - Failsafe: Fetch and group in JS
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // Views by day - Failsafe: Fetch and group in JS
+    let dateFilter: any = undefined;
+    if (startDate && endDate) {
+      dateFilter = and(
+        gte(postViews.viewedAt, new Date(startDate)),
+        sql`${postViews.viewedAt} <= ${new Date(endDate)}`
+      );
+    } else if (startDate) {
+      dateFilter = gte(postViews.viewedAt, new Date(startDate));
+    } else {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      dateFilter = gte(postViews.viewedAt, thirtyDaysAgo);
+    }
 
     let viewsByDay: { day: string; count: number }[] = [];
     try {
@@ -312,9 +315,8 @@ export async function getDashboardStats() {
         viewedAt: postViews.viewedAt,
       })
       .from(postViews)
-      .where(gte(postViews.viewedAt, thirtyDaysAgo));
+      .where(dateFilter);
 
-      // Group in JS to avoid SQL dialect issues
       const viewsByDayMap = new Map<string, number>();
       rawViews.forEach(v => {
         if (v.viewedAt) {
@@ -327,8 +329,7 @@ export async function getDashboardStats() {
         .map(([day, count]) => ({ day, count }))
         .sort((a, b) => a.day.localeCompare(b.day));
     } catch (e) {
-      console.error("[Database] Failed to fetch post_views, table might be missing:", e);
-      // Don't throw, just return empty viewsByDay
+      console.error("[Database] Failed to fetch post_views:", e);
     }
 
     // Views by category
@@ -373,7 +374,7 @@ export async function getDashboardStats() {
     .orderBy(desc(posts.views))
     .limit(10);
 
-    const result = {
+    return {
       summary: {
         totalPosts: Number(counts?.totalPosts || 0),
         totalViews: Number(counts?.totalViews || 0),
@@ -387,9 +388,6 @@ export async function getDashboardStats() {
         views: Number(p.views || 0)
       })),
     };
-    
-    console.log("[Database] Dashboard stats fetched successfully via failsafe method");
-    return result;
   } catch (error) {
     console.error("[Database] getDashboardStats error:", error);
     throw error;
