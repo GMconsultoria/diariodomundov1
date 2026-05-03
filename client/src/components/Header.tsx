@@ -114,9 +114,15 @@ export default function Header() {
                           Acessar Painel Admin
                         </Link>
                       )}
-                      
+
+                      {user?.role === "editor" && (
+                        <Link href="/admin/" className="no-underline block px-4 py-2 text-sm text-white hover:bg-gray-700 transition-colors">
+                          Acessar Painel
+                        </Link>
+                      )}
+
                       {user?.role === "reader" && (
-                        <button 
+                        <button
                           onClick={handleDeleteAccount}
                           className="w-full text-left px-4 py-2 text-sm text-gray-400 hover:text-red-500 hover:bg-gray-700 transition-colors flex items-center gap-2 cursor-pointer"
                         >
@@ -227,9 +233,15 @@ export default function Header() {
                       Acessar Painel Admin
                     </Link>
                   )}
-                  
+
+                  {user?.role === "editor" && (
+                    <Link href="/admin/" className="no-underline block px-4 py-3 text-sm text-white hover:bg-gray-800 transition-colors">
+                      Acessar Painel
+                    </Link>
+                  )}
+
                   {user?.role === "reader" && (
-                    <button 
+                    <button
                       onClick={handleDeleteAccount}
                       className="w-full text-left px-4 py-3 text-sm text-gray-400 hover:text-red-500 hover:bg-gray-800 transition-colors flex items-center gap-2 cursor-pointer"
                     >
