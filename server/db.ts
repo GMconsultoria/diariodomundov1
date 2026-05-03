@@ -1,4 +1,4 @@
-import { eq, like, desc, and, sql, gte } from "drizzle-orm";
+import { eq, like, desc, and, sql, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, posts, Post, InsertPost, postViews, contactMessages, InsertContactMessage, InsertPostView } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -298,7 +298,7 @@ export async function getDashboardStats(startDate?: string, endDate?: string) {
       endOfDay.setHours(23, 59, 59, 999);
       dateFilter = and(
         gte(postViews.viewedAt, new Date(startDate)),
-        sql`${postViews.viewedAt} <= ${endOfDay}`
+        lte(postViews.viewedAt, endOfDay)
       );
     } else if (startDate) {
       dateFilter = gte(postViews.viewedAt, new Date(startDate));
