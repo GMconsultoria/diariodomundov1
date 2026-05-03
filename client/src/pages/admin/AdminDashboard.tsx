@@ -206,7 +206,7 @@ export default function AdminDashboard() {
                   outerRadius={100}
                   paddingAngle={5}
                 >
-                  {stats.viewsByCategory.map((_, index) => (
+                  {stats.viewsByCategory.map((_: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -251,7 +251,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {stats.topPosts.slice(0, 5).map((post, index) => (
+                {stats.topPosts.slice(0, 5).map((post: any, index: number) => (
                   <tr key={post.id} className="hover:bg-muted/50 transition-colors text-sm">
                     <td className="py-3 font-bold text-muted-foreground">#{index + 1}</td>
                     <td className="py-3 font-semibold max-w-[200px] truncate">{post.title}</td>

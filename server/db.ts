@@ -2,6 +2,27 @@ import { eq, like, desc, and, sql, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, posts, Post, InsertPost, postViews, contactMessages, InsertContactMessage, InsertPostView } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { z } from "zod";
+import { CATEGORIES } from "../shared/const";
+
+const POST_SELECT_FIELDS = {
+  id: posts.id,
+  title: posts.title,
+  subtitle: posts.subtitle,
+  slug: posts.slug,
+  category: posts.category,
+  author: posts.author,
+  imageUrl: posts.imageUrl,
+  imageKey: posts.imageKey,
+  published: posts.published,
+  views: posts.views,
+  publishedAt: posts.publishedAt,
+  createdAt: posts.createdAt,
+  updatedAt: posts.updatedAt,
+} as const;
+
+const dashboardStatsCache = new Map<string, { data: any, timestamp: number }>();
+const STATS_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -163,21 +184,7 @@ export async function getAllPublishedPosts(limit: number = 30, offset: number = 
   if (!db) throw new Error("Database not available");
   
   return await db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      subtitle: posts.subtitle,
-      slug: posts.slug,
-      category: posts.category,
-      author: posts.author,
-      imageUrl: posts.imageUrl,
-      imageKey: posts.imageKey,
-      published: posts.published,
-      views: posts.views,
-      publishedAt: posts.publishedAt,
-      createdAt: posts.createdAt,
-      updatedAt: posts.updatedAt,
-    })
+    .select(POST_SELECT_FIELDS)
     .from(posts)
     .where(eq(posts.published, true))
     .orderBy(desc(posts.publishedAt))
@@ -189,24 +196,12 @@ export async function getPostsByCategory(category: string, limit: number = 50, o
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
+  const validatedCategory = z.enum(CATEGORIES).parse(category);
+  
   return await db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      subtitle: posts.subtitle,
-      slug: posts.slug,
-      category: posts.category,
-      author: posts.author,
-      imageUrl: posts.imageUrl,
-      imageKey: posts.imageKey,
-      published: posts.published,
-      views: posts.views,
-      publishedAt: posts.publishedAt,
-      createdAt: posts.createdAt,
-      updatedAt: posts.updatedAt,
-    })
+    .select(POST_SELECT_FIELDS)
     .from(posts)
-    .where(and(eq(posts.published, true), eq(posts.category, category as any)))
+    .where(and(eq(posts.published, true), eq(posts.category, validatedCategory)))
     .orderBy(desc(posts.publishedAt))
     .limit(limit)
     .offset(offset);
@@ -218,21 +213,7 @@ export async function searchPosts(query: string, limit: number = 50): Promise<an
   
   const searchTerm = `%${query}%`;
   return await db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      subtitle: posts.subtitle,
-      slug: posts.slug,
-      category: posts.category,
-      author: posts.author,
-      imageUrl: posts.imageUrl,
-      imageKey: posts.imageKey,
-      published: posts.published,
-      views: posts.views,
-      publishedAt: posts.publishedAt,
-      createdAt: posts.createdAt,
-      updatedAt: posts.updatedAt,
-    })
+    .select(POST_SELECT_FIELDS)
     .from(posts)
     .where(
       and(
@@ -249,26 +230,15 @@ export async function getAllPostsAdmin(limit: number = 100, offset: number = 0, 
   if (!db) throw new Error("Database not available");
   
   let conditions = [];
-  if (category) conditions.push(eq(posts.category, category as any));
+  if (category) {
+    const validatedCategory = z.enum(CATEGORIES).parse(category);
+    conditions.push(eq(posts.category, validatedCategory));
+  }
   if (search) conditions.push(like(posts.title, `%${search}%`));
   if (author) conditions.push(like(posts.author, `%${author}%`));
 
   return await db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      subtitle: posts.subtitle,
-      slug: posts.slug,
-      category: posts.category,
-      author: posts.author,
-      imageUrl: posts.imageUrl,
-      imageKey: posts.imageKey,
-      published: posts.published,
-      views: posts.views,
-      publishedAt: posts.publishedAt,
-      createdAt: posts.createdAt,
-      updatedAt: posts.updatedAt,
-    })
+    .select(POST_SELECT_FIELDS)
     .from(posts)
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(posts.createdAt))
@@ -279,6 +249,14 @@ export async function getAllPostsAdmin(limit: number = 100, offset: number = 0, 
 export async function getDashboardStats(startDate?: string, endDate?: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+
+  const cacheKey = `stats:${startDate}:${endDate}`;
+  const cached = dashboardStatsCache.get(cacheKey);
+  
+  if (cached && (Date.now() - cached.timestamp) < STATS_CACHE_TTL) {
+    console.log("[Cache] Serving stats from cache");
+    return cached.data;
+  }
 
   try {
     // Basic counters
@@ -369,7 +347,7 @@ export async function getDashboardStats(startDate?: string, endDate?: string) {
     .orderBy(desc(posts.views))
     .limit(10);
 
-    return {
+    const result = {
       summary: {
         totalPosts: Number(counts?.totalPosts || 0),
         totalViews: Number(counts?.totalViews || 0),
@@ -389,6 +367,10 @@ export async function getDashboardStats(startDate?: string, endDate?: string) {
         views: Number(p.views || 0)
       })),
     };
+
+    dashboardStatsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+
+    return result;
   } catch (error) {
     console.error("[Database] getDashboardStats error:", error);
     throw error;

@@ -1,5 +1,8 @@
 import { COOKIE_NAME, CATEGORIES } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/sdk";
+import { Resend } from 'resend';
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, adminProcedure, editorProcedure } from "./_core/trpc";
 import { fileTypeFromBuffer } from "file-type";
@@ -88,9 +91,9 @@ export const appRouter = router({
       }),
 
     search: publicProcedure
-      .input(z.object({ query: z.string().min(1) }))
+      .input(z.object({ query: z.string().min(2).max(100).trim() }))
       .query(async ({ input }) => {
-        return await searchPosts(input.query);
+        return await searchPosts(input.query.trim());
       }),
   }),
 
@@ -234,7 +237,27 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         await createContactMessage(input);
-        console.log(`[Email Mock] Enviando e-mail para admin: Nova mensagem de ${input.name} (${input.email})`);
+        
+        if (resend) {
+          try {
+            await resend.emails.send({
+              from: "noreply@diariodomundo.com.br",
+              to: process.env.ADMIN_EMAIL || "admin@diariodomundo.com.br",
+              reply_to: input.email,
+              subject: `Nova mensagem de ${input.name}: ${input.subject}`,
+              html: `
+                <p><strong>De:</strong> ${input.name} (${input.email})</p>
+                <p><strong>Assunto:</strong> ${input.subject}</p>
+                <hr />
+                <p>${input.message.replace(/\\n/g, '<br>')}</p>
+              `
+            });
+          } catch (error) {
+            console.error("[Email] Failed to send:", error);
+          }
+        }
+        
+        console.log(`[Contact] Nova mensagem de ${input.name} (${input.email}): ${input.subject}`);
         return { success: true };
       }),
     

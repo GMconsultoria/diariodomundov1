@@ -16,6 +16,10 @@ import { sql } from "drizzle-orm";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 
+let cachedSitemap: string | null = null;
+let sitemapCacheTime: number = 0;
+const SITEMAP_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 horas
+
 function getQueryParam(req: express.Request, name: string): string {
   const val = req.query[name];
   return typeof val === "string" ? val : "";
@@ -63,6 +67,21 @@ async function startServer() {
   });
   app.use("/api/trpc/contact.submit", contactLimiter);
 
+  // Rate Limiting para incrementView
+  const incrementViewLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minuto
+    max: 100, // Max 100 views por IP por minuto
+    keyGenerator: (req) => {
+      // Considerar X-Forwarded-For para Render proxy
+      return req.headers['x-forwarded-for'] as string || req.ip || 'unknown';
+    },
+    skip: (req) => {
+      // Skip em localhost/dev
+      return process.env.NODE_ENV === 'development';
+    }
+  });
+  app.use("/api/trpc/posts.incrementView", incrementViewLimiter);
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -71,46 +90,59 @@ async function startServer() {
   console.log("[Server] Registering API routes...");
 
   // Run database migrations for the new contact_messages table
-  try {
-    const database = await db.getDb();
-    if (database) {
-      console.log("[Migration] Ensuring contact_messages table exists...");
-      await database.execute(sql.raw(`
-        CREATE TABLE IF NOT EXISTS \`contact_messages\` (
-          \`id\` int AUTO_INCREMENT PRIMARY KEY,
-          \`name\` varchar(255) NOT NULL,
-          \`email\` varchar(320) NOT NULL,
-          \`subject\` varchar(255) NOT NULL,
-          \`message\` text NOT NULL,
-          \`read\` boolean NOT NULL DEFAULT false,
-          \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
-      `));
-      console.log("[Migration] contact_messages table checked/created.");
+  const shouldRunMigrations = process.env.NODE_ENV !== 'production' || process.env.RUN_MIGRATIONS === 'true';
 
-      console.log("[Migration] Ensuring post_views table exists...");
-      await database.execute(sql.raw(`
-        CREATE TABLE IF NOT EXISTS \`post_views\` (
-          \`id\` int AUTO_INCREMENT PRIMARY KEY,
-          \`postId\` int NOT NULL,
-          \`viewedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          INDEX \`post_id_idx\` (\`postId\`),
-          INDEX \`viewed_at_idx\` (\`viewedAt\`)
-        )
-      `));
-      console.log("[Migration] post_views table checked/created.");
+  if (shouldRunMigrations) {
+    try {
+      const database = await db.getDb();
+      if (database) {
+        console.log("[Migration] Ensuring contact_messages table exists...");
+        await database.execute(sql.raw(`
+          CREATE TABLE IF NOT EXISTS \`contact_messages\` (
+            \`id\` int AUTO_INCREMENT PRIMARY KEY,
+            \`name\` varchar(255) NOT NULL,
+            \`email\` varchar(320) NOT NULL,
+            \`subject\` varchar(255) NOT NULL,
+            \`message\` text NOT NULL,
+            \`read\` boolean NOT NULL DEFAULT false,
+            \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+          )
+        `));
+        console.log("[Migration] contact_messages table checked/created.");
+
+        console.log("[Migration] Ensuring post_views table exists...");
+        await database.execute(sql.raw(`
+          CREATE TABLE IF NOT EXISTS \`post_views\` (
+            \`id\` int AUTO_INCREMENT PRIMARY KEY,
+            \`postId\` int NOT NULL,
+            \`viewedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX \`post_id_idx\` (\`postId\`),
+            INDEX \`viewed_at_idx\` (\`viewedAt\`)
+          )
+        `));
+        console.log("[Migration] post_views table checked/created.");
+      }
+    } catch (err: any) {
+      console.error("[Migration] Failed to run migrations:", err.message);
     }
-  } catch (err: any) {
-    console.error("[Migration] Failed to run migrations:", err.message);
   }
   
   // SEO: Sitemap.xml and Robots.txt
   app.get("/sitemap.xml", async (req, res) => {
     try {
+      // Verificar cache
+      const now = Date.now();
+      if (cachedSitemap && (now - sitemapCacheTime) < SITEMAP_CACHE_TTL) {
+        res.header("Content-Type", "application/xml");
+        res.header("Cache-Control", "public, max-age=86400");
+        return res.send(cachedSitemap);
+      }
+
       const { getAllPublishedPosts } = await import("../db");
       const posts = await getAllPublishedPosts(1000); // Get latest 1000
       
-      const origin = req.get('host') ? `${req.protocol}://${req.get('host')}` : 'https://diariodomundov2.onrender.com';
+      const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+      const origin = ENV.baseUrl || `${protocol}://${req.get('host')}`;
       
       let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
       xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
@@ -131,7 +163,12 @@ async function startServer() {
       
       xml += `</urlset>`;
       
+      // Cache
+      cachedSitemap = xml;
+      sitemapCacheTime = now;
+
       res.header("Content-Type", "application/xml");
+      res.header("Cache-Control", "public, max-age=86400");
       res.send(xml);
     } catch (e) {
       res.status(500).send("Error generating sitemap");
@@ -139,7 +176,8 @@ async function startServer() {
   });
 
   app.get("/robots.txt", (req, res) => {
-    const origin = req.get('host') ? `${req.protocol}://${req.get('host')}` : 'https://diariodomundov2.onrender.com';
+    const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+    const origin = ENV.baseUrl || `${protocol}://${req.get('host')}`;
     res.type("text/plain");
     res.send(`User-agent: *\nAllow: /\nSitemap: ${origin}/sitemap.xml`);
   });
@@ -189,7 +227,6 @@ async function startServer() {
   };
 
   app.get("/api/auth/login", loginHandler);
-  app.get("/api/auth-login", loginHandler);
   app.get("/api/oauth/callback", async (req: express.Request, res: express.Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
@@ -243,7 +280,16 @@ async function startServer() {
       }
       res.redirect(returnTo);
     } catch (error: any) {
-      console.error("[OAuth] Callback processing failed", error?.response?.data || error);
+      const errorData = error?.response?.data || error;
+      console.error("[OAuth] Callback processing failed:", errorData);
+      
+      // Log estruturado para Render logs
+      console.error("[OAuth] Details:", {
+        status: error?.response?.status,
+        message: error?.message,
+        timestamp: new Date().toISOString()
+      });
+      
       res.status(500).send("Authentication failed. Please check your Google OAuth credentials.");
     }
   });
