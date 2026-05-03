@@ -42,22 +42,6 @@ async function startServer() {
 
   // API Routes MUST be registered BEFORE serveStatic to avoid 404/SPA interception in production
   console.log("[Server] Registering API routes...");
-
-  // Run database migrations
-  try {
-    const database = await db.getDb();
-    if (database) {
-      console.log("[Migration] Checking users table schema...");
-      await database.execute(sql.raw("ALTER TABLE `users` MODIFY COLUMN `role` ENUM('admin', 'editor', 'reader', 'user') NOT NULL DEFAULT 'reader'"));
-      console.log("[Migration] Users table updated successfully.");
-      
-      console.log("[Migration] Ensuring post_views table exists...");
-      await database.execute(sql.raw("CREATE TABLE IF NOT EXISTS `post_views` (`id` int AUTO_INCREMENT PRIMARY KEY, `postId` int NOT NULL, `viewedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)"));
-      console.log("[Migration] post_views table checked/created.");
-    }
-  } catch (err: any) {
-    console.error("[Migration] Failed to run auto-migrations:", err.message);
-  }
   
   // Health check
   app.get("/api/health", (req, res) => {
@@ -66,28 +50,7 @@ async function startServer() {
   });
 
   app.get("/api/version", (req, res) => {
-    res.json({ version: "v1.2.3-diagnostics-v3" });
-  });
-
-  app.get("/api/debug-db", async (req, res) => {
-    const database = await db.getDb();
-    if (!database) return res.json({ error: "No DB connection" });
-    try {
-      const tables: any = await database.execute(sql`SHOW TABLES`);
-      const schema: Record<string, any> = {};
-      
-      // Extract table names
-      const tableNames = tables[0].map((t: any) => Object.values(t)[0]);
-      
-      for (const name of tableNames) {
-        const columns: any = await database.execute(sql.raw(`DESCRIBE \`${name}\``));
-        schema[name] = columns[0];
-      }
-      
-      res.json({ tables: tableNames, schema });
-    } catch (e: any) {
-      res.status(500).json({ error: e.message });
-    }
+    res.json({ version: "v1.2.3-stable" });
   });
 
   registerStorageProxy(app);
