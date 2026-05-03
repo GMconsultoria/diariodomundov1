@@ -13,6 +13,8 @@ import { ENV } from "./env";
 import * as db from "../db";
 import { getSessionCookieOptions, sdk } from "./sdk";
 import { sql } from "drizzle-orm";
+import helmet from "helmet";
+import { rateLimit } from "express-rate-limit";
 
 function getQueryParam(req: express.Request, name: string): string {
   const val = req.query[name];
@@ -27,14 +29,39 @@ async function startServer() {
   // Performance: Enable Gzip compression
   app.use(compression());
 
-  // Security: Basic hardening headers
-  app.use((req, res, next) => {
-    res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("X-Frame-Options", "DENY");
-    res.setHeader("X-XSS-Protection", "1; mode=block");
-    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-    next();
+  // Security: Global Hardening with Helmet
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "img-src": ["'self'", "data:", "https:", "https://*.unsplash.com", "https://*.google.com"],
+        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.google.com", "https://*.gstatic.com"],
+        "connect-src": ["'self'", "https:", "wss:", "ws:"],
+        "frame-src": ["'self'", "https://*.google.com"],
+        "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        "font-src": ["'self'", "https://fonts.gstatic.com"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  }));
+
+  // Rate Limiting: General protection
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, // Limit each IP to 1000 requests per window
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: "Too many requests from this IP, please try again after 15 minutes",
   });
+  app.use("/api", limiter);
+
+  // Specialized Limiter for Contact Form (Spam protection)
+  const contactLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // Limit each IP to 5 contact submissions per hour
+    message: "Muitas mensagens enviadas. Por favor, tente novamente mais tarde.",
+  });
+  app.use("/api/trpc/contact.submit", contactLimiter);
 
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
