@@ -38,7 +38,7 @@ export default function AdminDashboard() {
     };
   };
 
-  const { data: stats, isLoading, error, refetch } = trpc.admin.getStats.useQuery(getFilterParams());
+  const { data: stats, isLoading, error, refetch, isFetching } = trpc.admin.getStats.useQuery(getFilterParams());
 
   if (isLoading) {
     return (
@@ -59,9 +59,10 @@ export default function AdminDashboard() {
           </p>
           <button 
             onClick={() => refetch()}
-            className="px-6 py-3 bg-accent text-white rounded-lg hover:bg-red-700 transition-all font-bold flex items-center justify-center gap-2 mx-auto"
+            disabled={isFetching}
+            className="px-6 py-3 bg-accent text-white rounded-lg hover:bg-red-700 transition-all font-bold flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
           >
-            <RotateCw size={18} />
+            <RotateCw size={18} className={isFetching ? "animate-spin" : ""} />
             Tentar Novamente
           </button>
         </div>
@@ -116,10 +117,11 @@ export default function AdminDashboard() {
           
           <button 
             onClick={() => refetch()}
-            className="p-2 hover:bg-muted rounded-lg transition-colors text-accent"
+            disabled={isFetching}
+            className={`p-2 rounded-lg transition-colors text-accent ${isFetching ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'}`}
             title="Atualizar dados"
           >
-            <RotateCw size={18} />
+            <RotateCw size={18} className={isFetching ? "animate-spin" : ""} />
           </button>
         </div>
       </div>
