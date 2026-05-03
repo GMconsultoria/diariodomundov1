@@ -308,7 +308,6 @@ export async function getDashboardStats(startDate?: string, endDate?: string) {
 
     let viewsByDay: { day: string; count: number }[] = [];
     try {
-      // Aggregate views by day directly in SQL for better performance
       const rawViews = await db.select({
         day: sql<string>`DATE_FORMAT(${postViews.viewedAt}, '%Y-%m-%d')`,
         count: sql<number>`COUNT(*)`
@@ -318,7 +317,18 @@ export async function getDashboardStats(startDate?: string, endDate?: string) {
       .groupBy(sql`DATE_FORMAT(${postViews.viewedAt}, '%Y-%m-%d')`)
       .orderBy(sql`DATE_FORMAT(${postViews.viewedAt}, '%Y-%m-%d')`);
 
-      viewsByDay = rawViews.map(v => ({ day: v.day, count: Number(v.count) }));
+      const viewMap = new Map(rawViews.map(v => [v.day, Number(v.count)]));
+      
+      const start = startDate ? new Date(startDate) : (() => { const d = new Date(); d.setDate(d.getDate() - 30); return d; })();
+      const end = endDate ? new Date(endDate) : new Date();
+      
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dayStr = d.toISOString().split('T')[0];
+        viewsByDay.push({
+          day: dayStr,
+          count: viewMap.get(dayStr) || 0
+        });
+      }
     } catch (e) {
       console.error("[Database] Failed to fetch post_views:", e);
     }
