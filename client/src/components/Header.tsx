@@ -4,6 +4,7 @@ import { getCategoryLink } from "@/lib/categoryUtils";
 import { Search, ChevronDown, LogOut, UserX } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 import { CATEGORIES } from "@shared/const";
 
 export default function Header() {
