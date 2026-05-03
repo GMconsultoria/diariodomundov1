@@ -105,11 +105,8 @@ export async function updateUserRole(userId: number, role: "admin" | "editor" | 
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   try {
-    console.log(`[Database] Updating user ${userId} to role ${role}...`);
-    // Using raw SQL for the update to bypass potential enum binding issues in some MySQL environments
     const query = sql`UPDATE \`users\` SET \`role\` = ${role} WHERE \`id\` = ${userId}`;
     await db.execute(query);
-    console.log(`[Database] Update successful for user ${userId}`);
   } catch (error: any) {
     console.error(`[Database] Failed to update user role for ID ${userId}. Error: ${error.message}`);
     throw error;

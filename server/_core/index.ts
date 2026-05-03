@@ -20,7 +20,7 @@ function getQueryParam(req: express.Request, name: string): string {
 }
 
 async function startServer() {
-  console.log("[Server] Version: 1.2.3-diagnostics");
+  console.log("[Server] Version: 1.3.0-stable");
   const app = express();
   const server = createServer(app);
 
@@ -67,7 +67,6 @@ async function startServer() {
   
   // Health check
   app.get("/api/health", (req, res) => {
-    console.log("[API] Health check requested");
     res.json({ ok: true, timestamp: Date.now(), env: process.env.NODE_ENV });
   });
 
@@ -79,7 +78,6 @@ async function startServer() {
 
   // OAuth Routes (Native Google OAuth 2.0)
   const loginHandler = (req: express.Request, res: express.Response) => {
-    console.log(`[OAuth] Login request received: ${req.url}`);
     try {
       const clientId = ENV.googleClientId;
       
@@ -96,8 +94,6 @@ async function startServer() {
       const origin = ENV.baseUrl || `${protocol}://${req.get("host")}`;
       const redirectUri = `${origin}/api/oauth/callback`;
       const returnTo = (req.query.returnTo as string) || "/";
-
-      console.log("[OAuth] Generating Google Auth URL with redirectUri:", redirectUri);
 
       const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
       authUrl.searchParams.set("client_id", clientId);
@@ -116,7 +112,6 @@ async function startServer() {
   app.get("/api/auth/login", loginHandler);
   app.get("/api/auth-login", loginHandler);
   app.get("/api/oauth/callback", async (req: express.Request, res: express.Response) => {
-    console.log(`[OAuth] Callback received: ${req.url}`);
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
 
