@@ -87,9 +87,21 @@ async function startServer() {
         )
       `));
       console.log("[Migration] contact_messages table checked/created.");
+
+      console.log("[Migration] Ensuring post_views table exists...");
+      await database.execute(sql.raw(`
+        CREATE TABLE IF NOT EXISTS \`post_views\` (
+          \`id\` int AUTO_INCREMENT PRIMARY KEY,
+          \`postId\` int NOT NULL,
+          \`viewedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          INDEX \`post_id_idx\` (\`postId\`),
+          INDEX \`viewed_at_idx\` (\`viewedAt\`)
+        )
+      `));
+      console.log("[Migration] post_views table checked/created.");
     }
   } catch (err: any) {
-    console.error("[Migration] Failed to run contact_messages migration:", err.message);
+    console.error("[Migration] Failed to run migrations:", err.message);
   }
   
   // SEO: Sitemap.xml and Robots.txt
