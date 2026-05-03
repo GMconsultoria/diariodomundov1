@@ -1,12 +1,13 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Route, Switch, Link, useLocation, Router } from "wouter";
-import { Loader2, LogOut, Menu, X, LayoutDashboard, FileText as FileTextIcon, PlusCircle, Users, Shield, User as UserIcon } from "lucide-react";
+import { Loader2, LogOut, Menu, X, LayoutDashboard, FileText as FileTextIcon, PlusCircle, Users, Shield, User as UserIcon, Mail } from "lucide-react";
 import { useState } from "react";
 import AdminDashboard from "./AdminDashboard";
 import AdminPostsList from "./AdminPostsList";
 import AdminCreatePost from "./AdminCreatePost";
 import AdminEditPost from "./AdminEditPost";
 import AdminUsersList from "./AdminUsersList";
+import AdminMessages from "./AdminMessages";
 
 export default function AdminLayout() {
   const { user, loading, isAuthenticated, logout } = useAuth();
@@ -118,6 +119,14 @@ export default function AdminLayout() {
                 sidebarOpen={sidebarOpen}
               />
             )}
+            {isAdmin && (
+              <NavLink
+                href="/messages"
+                label="Mensagens"
+                icon={<Mail size={20} />}
+                sidebarOpen={sidebarOpen}
+              />
+            )}
           </nav>
 
           {/* User info */}
@@ -150,6 +159,7 @@ export default function AdminLayout() {
             <Route path="/posts/new" component={AdminCreatePost} />
             <Route path="/posts/:id/edit" component={AdminEditPost} />
             {isAdmin && <Route path="/users" component={AdminUsersList} />}
+            {isAdmin && <Route path="/messages" component={AdminMessages} />}
             {/* Fallback to first available route */}
             <Route>
               <div className="p-8">

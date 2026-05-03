@@ -42,6 +42,28 @@ async function startServer() {
 
   // API Routes MUST be registered BEFORE serveStatic to avoid 404/SPA interception in production
   console.log("[Server] Registering API routes...");
+
+  // Run database migrations for the new contact_messages table
+  try {
+    const database = await db.getDb();
+    if (database) {
+      console.log("[Migration] Ensuring contact_messages table exists...");
+      await database.execute(sql.raw(`
+        CREATE TABLE IF NOT EXISTS \`contact_messages\` (
+          \`id\` int AUTO_INCREMENT PRIMARY KEY,
+          \`name\` varchar(255) NOT NULL,
+          \`email\` varchar(320) NOT NULL,
+          \`subject\` varchar(255) NOT NULL,
+          \`message\` text NOT NULL,
+          \`read\` boolean NOT NULL DEFAULT false,
+          \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+      `));
+      console.log("[Migration] contact_messages table checked/created.");
+    }
+  } catch (err: any) {
+    console.error("[Migration] Failed to run contact_messages migration:", err.message);
+  }
   
   // Health check
   app.get("/api/health", (req, res) => {

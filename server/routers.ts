@@ -18,6 +18,9 @@ import {
   incrementPostViews,
   getAllUsers,
   updateUserRole,
+  createContactMessage,
+  getAllContactMessages,
+  markMessageAsRead,
 } from "./db";
 import { TRPCError } from "@trpc/server";
 import { storagePut } from "./storage";
@@ -218,6 +221,32 @@ export const appRouter = router({
           }
         }),
     }),
+  }),
+  
+  contact: router({
+    submit: publicProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        subject: z.string().min(1),
+        message: z.string().min(1),
+      }))
+      .mutation(async ({ input }) => {
+        await createContactMessage(input);
+        console.log(`[Email Mock] Enviando e-mail para admin: Nova mensagem de ${input.name} (${input.email})`);
+        return { success: true };
+      }),
+    
+    getAll: adminProcedure.query(async () => {
+      return await getAllContactMessages();
+    }),
+    
+    markAsRead: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await markMessageAsRead(input.id);
+        return { success: true };
+      }),
   }),
 });
 

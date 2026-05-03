@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { trpc } from "@/lib/trpc";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Mail, Phone, MapPin } from "lucide-react";
@@ -19,15 +20,23 @@ export default function Contact() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const submitMutation = trpc.contact.submit.useMutation({
+    onSuccess: () => {
+      toast.success("Mensagem enviada!", {
+        description: "Agradecemos o contato. Responderemos em breve.",
+      });
+      setSubmitted(true);
+      setFormData({ name: "", email: "", subject: "", message: "" });
+      setTimeout(() => setSubmitted(false), 5000);
+    },
+    onError: (err) => {
+      toast.error("Erro ao enviar mensagem: " + err.message);
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate API call
-    toast.success("Mensagem enviada!", {
-      description: "Agradecemos o contato. Responderemos em breve.",
-    });
-    setSubmitted(true);
-    setFormData({ name: "", email: "", subject: "", message: "" });
-    setTimeout(() => setSubmitted(false), 5000);
+    submitMutation.mutate(formData);
   };
 
   return (

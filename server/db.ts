@@ -394,6 +394,24 @@ export async function getDashboardStats(startDate?: string, endDate?: string) {
   }
 }
 
+export async function createContactMessage(message: InsertContactMessage) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(contactMessages).values(message);
+}
+
+export async function getAllContactMessages() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.select().from(contactMessages).orderBy(desc(contactMessages.createdAt));
+}
+
+export async function markMessageAsRead(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(contactMessages).set({ read: true }).where(eq(contactMessages.id, id));
+}
+
 export async function incrementPostViews(id: number): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
