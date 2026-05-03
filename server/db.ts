@@ -415,14 +415,22 @@ export async function markMessageAsRead(id: number) {
 
 export async function incrementPostViews(id: number): Promise<void> {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    console.error("[Database] incrementPostViews: DB not available");
+    return;
+  }
   
+  // Step 1: Increment post view counter
   try {
-    await db.transaction(async (tx) => {
-      await tx.update(posts).set({ views: sql`${posts.views} + 1` }).where(eq(posts.id, id));
-      await tx.insert(postViews).values({ postId: id });
-    });
+    await db.update(posts).set({ views: sql`${posts.views} + 1` }).where(eq(posts.id, id));
   } catch (error) {
-    console.error(`[Database] Failed to increment views for post ${id}:`, error);
+    console.error(`[Database] Failed to increment posts.views for post ${id}:`, error);
+  }
+
+  // Step 2: Insert into post_views history (for daily chart)
+  try {
+    await db.insert(postViews).values({ postId: id });
+  } catch (error) {
+    console.error(`[Database] Failed to insert into post_views for post ${id}:`, error);
   }
 }
