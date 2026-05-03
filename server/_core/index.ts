@@ -73,7 +73,7 @@ async function startServer() {
       const protocol = req.headers["x-forwarded-proto"] || req.protocol;
       const origin = ENV.baseUrl || `${protocol}://${req.get("host")}`;
       const redirectUri = `${origin}/api/oauth/callback`;
-      const returnTo = (req.query.returnTo as string) || "/admin";
+      const returnTo = (req.query.returnTo as string) || "/";
 
       console.log("[OAuth] Generating Google Auth URL with redirectUri:", redirectUri);
 
@@ -138,7 +138,7 @@ async function startServer() {
       });
 
       // 5. Redirect back to destination
-      let returnTo = "/admin";
+      let returnTo = "/";
       if (state) {
         try {
           const parsed = JSON.parse(state);
