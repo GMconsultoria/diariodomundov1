@@ -8,6 +8,7 @@ import {
   createPost,
   updatePost,
   deletePost,
+  deleteUser,
   getPostById,
   getPostBySlug,
   getAllPublishedPosts,
