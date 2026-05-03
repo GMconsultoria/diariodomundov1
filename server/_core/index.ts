@@ -12,6 +12,7 @@ import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { ENV } from "./env";
 import * as db from "../db";
 import { getSessionCookieOptions, sdk } from "./sdk";
+import { sql } from "drizzle-orm";
 
 function getQueryParam(req: express.Request, name: string): string {
   const val = req.query[name];
