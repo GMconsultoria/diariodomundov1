@@ -42,6 +42,22 @@ async function startServer() {
 
   // API Routes MUST be registered BEFORE serveStatic to avoid 404/SPA interception in production
   console.log("[Server] Registering API routes...");
+
+  // Run database migrations
+  try {
+    const database = await db.getDb();
+    if (database) {
+      console.log("[Migration] Checking users table schema...");
+      await database.execute(sql.raw("ALTER TABLE `users` MODIFY COLUMN `role` ENUM('admin', 'editor', 'reader', 'user') NOT NULL DEFAULT 'reader'"));
+      console.log("[Migration] Users table updated successfully.");
+      
+      console.log("[Migration] Ensuring post_views table exists...");
+      await database.execute(sql.raw("CREATE TABLE IF NOT EXISTS `post_views` (`id` int AUTO_INCREMENT PRIMARY KEY, `postId` int NOT NULL, `viewedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)"));
+      console.log("[Migration] post_views table checked/created.");
+    }
+  } catch (err: any) {
+    console.error("[Migration] Failed to run auto-migrations:", err.message);
+  }
   
   // Health check
   app.get("/api/health", (req, res) => {
