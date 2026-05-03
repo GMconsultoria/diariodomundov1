@@ -50,7 +50,7 @@ async function startServer() {
   });
 
   app.get("/api/version", (req, res) => {
-    res.json({ version: "v1.2.3-final-test-001" });
+    res.json({ version: "v1.2.3-diagnostics-v3" });
   });
 
   app.get("/api/debug-db", async (req, res) => {
