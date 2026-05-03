@@ -116,10 +116,15 @@ export default function Contact() {
 
               <button
                 type="submit"
-                className="w-full px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                disabled={submitMutation.isPending}
+                className="w-full py-4 bg-accent text-accent-foreground rounded-lg hover:bg-red-700 transition-all font-bold shadow-lg shadow-accent/20 disabled:opacity-50"
               >
-                Enviar Mensagem
+                {submitMutation.isPending ? "Enviando..." : "Enviar Mensagem"}
               </button>
+
+              <p className="text-[10px] text-muted-foreground text-center mt-4">
+                Ao enviar esta mensagem, você concorda com o processamento de seus dados pessoais para fins de resposta, conforme nossa <Link href="/privacidade" className="text-accent hover:underline">Política de Privacidade</Link> (LGPD).
+              </p>
             </form>
           </div>
         </div>

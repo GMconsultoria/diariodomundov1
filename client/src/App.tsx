@@ -14,6 +14,7 @@ import About from "./pages/About";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
+import CookieBanner from "./components/CookieBanner";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -43,6 +44,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <CookieBanner />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

@@ -78,6 +78,10 @@ export default function Login() {
               <Mail size={20} />
               Entrar com E-mail
             </button>
+
+            <p className="text-[10px] text-muted-foreground text-center mt-4 leading-relaxed">
+              Ao entrar, você concorda com o processamento de seus dados (nome e e-mail) conforme nossa <Link href="/privacidade" className="text-accent hover:underline">Política de Privacidade</Link> (LGPD).
+            </p>
           </div>
 
           <div className="relative">

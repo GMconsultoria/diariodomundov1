@@ -71,14 +71,21 @@ export default function Terms() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold mt-8 mb-4">9. Lei Aplicável</h2>
+              <h2 className="text-2xl font-bold mt-8 mb-4">9. Privacidade e Proteção de Dados</h2>
               <p>
-                Estes Termos de Uso são regidos pelas leis do Brasil, e você concorda em se submeter à jurisdição exclusiva dos tribunais brasileiros.
+                O uso do site está sujeito à nossa <a href="/privacidade" className="text-accent hover:underline">Política de Privacidade</a>, que explica como coletamos, usamos e protegemos seus dados pessoais em conformidade com a <strong>LGPD</strong>.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold mt-8 mb-4">10. Contato</h2>
+              <h2 className="text-2xl font-bold mt-8 mb-4">10. Lei Aplicável</h2>
+              <p>
+                Estes Termos de Uso são regidos pelas leis da República Federativa do Brasil, em especial a Lei Geral de Proteção de Dados (LGPD) e o Marco Civil da Internet. Você concorda em se submeter à jurisdição exclusiva dos tribunais brasileiros.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mt-8 mb-4">11. Contato</h2>
               <p>
                 Se você tiver dúvidas sobre estes Termos de Uso, entre em contato conosco através da página de contato.
               </p>

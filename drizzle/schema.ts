@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, index } from "drizzle-orm/mysql-core";
 import { CATEGORIES } from "../shared/const";
 
 /**
@@ -44,6 +44,12 @@ export const posts = mysqlTable("posts", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   publishedAt: timestamp("publishedAt"),
+}, (table) => {
+  return {
+    categoryIdx: index("category_idx").on(table.category),
+    publishedIdx: index("published_idx").on(table.published),
+    publishedAtIdx: index("published_at_idx").on(table.publishedAt),
+  };
 });
 
 export type Post = typeof posts.$inferSelect;
@@ -56,6 +62,11 @@ export const postViews = mysqlTable("post_views", {
   id: int("id").autoincrement().primaryKey(),
   postId: int("postId").notNull(),
   viewedAt: timestamp("viewedAt").defaultNow().notNull(),
+}, (table) => {
+  return {
+    postIdIdx: index("post_id_idx").on(table.postId),
+    viewedAtIdx: index("viewed_at_idx").on(table.viewedAt),
+  };
 });
 
 export type PostView = typeof postViews.$inferSelect;

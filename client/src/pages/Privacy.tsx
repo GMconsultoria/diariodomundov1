@@ -15,65 +15,69 @@ export default function Privacy() {
 
           <div className="space-y-6 text-foreground text-sm leading-relaxed">
             <section>
-              <h2 className="text-2xl font-bold mt-8 mb-4">1. Introdução</h2>
+              <h2 className="text-2xl font-bold mt-8 mb-4">1. Introdução e Base Legal</h2>
               <p>
-                O Diário do Mundo ("nós", "nosso" ou "nos") opera o site diario-do-mundo.com.br (o "Site"). Esta página informa você sobre nossas políticas sobre a coleta, uso e divulgação de dados pessoais quando você usa nosso Site.
+                O Diário do Mundo está comprometido com a proteção de seus dados pessoais. Esta política foi elaborada em conformidade com a <strong>Lei Geral de Proteção de Dados (Lei nº 13.709/2018 - LGPD)</strong>. Coletamos e processamos seus dados apenas quando temos uma base legal para fazê-lo, como consentimento, execução de contrato ou interesse legítimo.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold mt-8 mb-4">2. Coleta de Dados</h2>
+              <h2 className="text-2xl font-bold mt-8 mb-4">2. Dados Coletados</h2>
               <p>
-                Coletamos dados pessoais que você nos fornece voluntariamente, como seu nome e endereço de e-mail quando você se registra ou entra em contato conosco. Também coletamos dados automaticamente sobre sua visita ao Site, incluindo seu endereço IP, tipo de navegador e páginas visitadas.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mt-8 mb-4">3. Uso de Dados</h2>
-              <p>
-                Usamos os dados que coletamos para:
+                Coletamos apenas o mínimo necessário para operar o portal:
               </p>
               <ul className="ml-4 space-y-2 mt-2">
-                <li>• Fornecer e melhorar nossos serviços</li>
-                <li>• Enviar comunicações sobre atualizações e ofertas</li>
-                <li>• Responder a suas consultas e solicitações</li>
-                <li>• Analisar o uso do Site para melhorar a experiência do usuário</li>
-                <li>• Cumprir obrigações legais</li>
+                <li>• <strong>Dados de Login:</strong> Nome e e-mail via Google OAuth para identificar sua conta.</li>
+                <li>• <strong>Dados de Contato:</strong> Nome, e-mail e conteúdo da mensagem enviados via formulário.</li>
+                <li>• <strong>Dados de Acesso:</strong> Endereço IP (mascarado), tipo de dispositivo e páginas visitadas para fins estatísticos e segurança.</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold mt-8 mb-4">4. Compartilhamento de Dados</h2>
+              <h2 className="text-2xl font-bold mt-8 mb-4">3. Finalidade do Tratamento</h2>
               <p>
-                Não vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros, exceto quando exigido por lei ou com seu consentimento explícito.
+                Seus dados são utilizados exclusivamente para:
+              </p>
+              <ul className="ml-4 space-y-2 mt-2">
+                <li>• Gerenciar seu acesso ao portal e funcionalidades de "Minha Conta".</li>
+                <li>• Responder a solicitações enviadas pelo canal de Contato.</li>
+                <li>• Melhorar a performance e conteúdo do portal através de estatísticas anônimas.</li>
+                <li>• Garantir a segurança contra ataques e acessos indevidos.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mt-8 mb-4">4. Seus Direitos (Art. 18 da LGPD)</h2>
+              <p>
+                Como titular dos dados, você tem direito a:
+              </p>
+              <ul className="ml-4 space-y-2 mt-2">
+                <li>• Confirmação da existência de tratamento.</li>
+                <li>• Acesso aos seus dados.</li>
+                <li>• Correção de dados incompletos ou inexatos.</li>
+                <li>• <strong>Eliminação de dados:</strong> Você pode excluir sua conta e dados a qualquer momento pelo menu "Minha Conta".</li>
+                <li>• Revogação do consentimento.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mt-8 mb-4">5. Compartilhamento e Segurança</h2>
+              <p>
+                Não compartilhamos seus dados com terceiros para fins comerciais. Os dados são armazenados em servidores seguros com criptografia e protocolos de proteção rigorosos.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold mt-8 mb-4">5. Segurança de Dados</h2>
+              <h2 className="text-2xl font-bold mt-8 mb-4">6. Cookies</h2>
               <p>
-                Implementamos medidas de segurança técnicas e organizacionais para proteger seus dados pessoais contra acesso não autorizado, alteração, divulgação ou destruição.
+                Utilizamos cookies apenas para manter sua sessão ativa e para funcionamento técnico do site. Você pode gerenciar suas preferências de cookies através do seu navegador ou do nosso banner de consentimento.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold mt-8 mb-4">6. Seus Direitos</h2>
+              <h2 className="text-2xl font-bold mt-8 mb-4">7. Encarregado de Dados (DPO)</h2>
               <p>
-                Você tem o direito de acessar, corrigir ou deletar seus dados pessoais. Para exercer esses direitos, entre em contato conosco através da página de contato.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mt-8 mb-4">7. Mudanças nesta Política</h2>
-              <p>
-                Podemos atualizar esta Política de Privacidade periodicamente. Recomendamos que você revise esta página regularmente para se manter informado sobre como protegemos seus dados.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mt-8 mb-4">8. Contato</h2>
-              <p>
-                Se você tiver dúvidas sobre esta Política de Privacidade, entre em contato conosco através da página de contato.
+                Para qualquer dúvida ou solicitação sobre seus dados pessoais, entre em contato através de nossa página de <a href="/contato" className="text-accent hover:underline">Contato</a>.
               </p>
             </section>
           </div>

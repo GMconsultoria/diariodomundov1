@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link } from "wouter";
 import { getCategoryLink } from "@/lib/categoryUtils";
 import type { Post } from "@shared/types";
@@ -9,7 +10,7 @@ interface NewsCardProps {
   showCategory?: boolean;
 }
 
-export default function NewsCard({
+function NewsCard({
   post,
   imageHeight = "h-48",
   titleSize = "text-base",
@@ -59,3 +60,5 @@ export default function NewsCard({
     </div>
   );
 }
+
+export default memo(NewsCard);

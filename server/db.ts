@@ -308,57 +308,38 @@ export async function getDashboardStats(startDate?: string, endDate?: string) {
 
     let viewsByDay: { day: string; count: number }[] = [];
     try {
+      // Aggregate views by day directly in SQL for better performance
       const rawViews = await db.select({
-        viewedAt: postViews.viewedAt,
+        day: sql<string>`DATE_FORMAT(${postViews.viewedAt}, '%Y-%m-%d')`,
+        count: sql<number>`COUNT(*)`
       })
       .from(postViews)
-      .where(dateFilter);
+      .where(dateFilter)
+      .groupBy(sql`DATE_FORMAT(${postViews.viewedAt}, '%Y-%m-%d')`)
+      .orderBy(sql`DATE_FORMAT(${postViews.viewedAt}, '%Y-%m-%d')`);
 
-      const viewsByDayMap = new Map<string, number>();
-      rawViews.forEach(v => {
-        if (v.viewedAt) {
-          const dateKey = v.viewedAt.toISOString().split('T')[0];
-          viewsByDayMap.set(dateKey, (viewsByDayMap.get(dateKey) || 0) + 1);
-        }
-      });
-      
-      viewsByDay = Array.from(viewsByDayMap.entries())
-        .map(([day, count]) => ({ day, count }))
-        .sort((a, b) => a.day.localeCompare(b.day));
+      viewsByDay = rawViews.map(v => ({ day: v.day, count: Number(v.count) }));
     } catch (e) {
       console.error("[Database] Failed to fetch post_views:", e);
     }
 
-    // Views by category
-    const rawCategoryViews = await db.select({
+    // Views by category - Aggregated in SQL
+    const viewsByCategory = await db.select({
       category: posts.category,
-      views: posts.views,
-    }).from(posts);
+      count: sql<number>`SUM(${posts.views})`,
+    })
+    .from(posts)
+    .groupBy(posts.category);
 
-    const categoryMap = new Map<string, number>();
-    rawCategoryViews.forEach(p => {
-      const cat = p.category || "Geral";
-      categoryMap.set(cat, (categoryMap.get(cat) || 0) + (p.views || 0));
-    });
-
-    const viewsByCategory = Array.from(categoryMap.entries())
-      .map(([category, count]) => ({ category, count }));
-
-    // Top 5 authors
-    const rawAuthors = await db.select({
+    // Top 5 authors - Aggregated in SQL
+    const topAuthors = await db.select({
       author: posts.author,
-    }).from(posts);
-
-    const authorMap = new Map<string, number>();
-    rawAuthors.forEach(p => {
-      const auth = p.author || "Anônimo";
-      authorMap.set(auth, (authorMap.get(auth) || 0) + 1);
-    });
-
-    const topAuthors = Array.from(authorMap.entries())
-      .map(([author, count]) => ({ author, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+      count: sql<number>`COUNT(*)`,
+    })
+    .from(posts)
+    .groupBy(posts.author)
+    .orderBy(desc(sql`COUNT(*)`))
+    .limit(5);
 
     // Top 10 most viewed posts
     const topPosts = await db.select({
