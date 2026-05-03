@@ -359,8 +359,14 @@ export async function getDashboardStats(startDate?: string, endDate?: string) {
         totalUsers: Number(totalUsers?.count || 0),
       },
       viewsByDay,
-      viewsByCategory,
-      topAuthors,
+      viewsByCategory: (viewsByCategory || []).map(c => ({
+        ...c,
+        count: Number(c.count || 0)
+      })),
+      topAuthors: (topAuthors || []).map(a => ({
+        ...a,
+        count: Number(a.count || 0)
+      })),
       topPosts: (topPosts || []).map(p => ({
         ...p,
         views: Number(p.views || 0)
