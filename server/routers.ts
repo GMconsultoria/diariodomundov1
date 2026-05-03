@@ -118,9 +118,9 @@ export const appRouter = router({
         }),
     }),
 
-    // Posts management (Admin and Editor)
+    // Posts management
     posts: router({
-      getById: editorProcedure
+      getById: adminProcedure
         .input(z.object({ id: z.number() }))
         .query(async ({ input }) => {
           const post = await getPostById(input.id);
@@ -128,7 +128,7 @@ export const appRouter = router({
           return post;
         }),
 
-      getAll: editorProcedure
+      getAll: adminProcedure
         .input(z.object({
           limit: z.number().default(20),
           offset: z.number().default(0),
@@ -163,7 +163,7 @@ export const appRouter = router({
           });
         }),
 
-      update: editorProcedure
+      update: adminProcedure
         .input(z.object({
           id: z.number(),
           title: z.string().optional(),
@@ -195,7 +195,7 @@ export const appRouter = router({
           return await updatePost(id, { ...updates, slug, publishedAt });
         }),
 
-      delete: editorProcedure
+      delete: adminProcedure
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input }) => {
           const post = await getPostById(input.id);

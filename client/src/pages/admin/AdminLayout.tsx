@@ -63,6 +63,7 @@ export default function AdminLayout() {
   };
 
   const isAdmin = user?.role === "admin";
+  const isEditor = user?.role === "editor";
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -99,12 +100,14 @@ export default function AdminLayout() {
                 sidebarOpen={sidebarOpen}
               />
             )}
-            <NavLink
-              href="/posts"
-              label="Notícias"
-              icon={<FileTextIcon size={20} />}
-              sidebarOpen={sidebarOpen}
-            />
+            {isAdmin && (
+              <NavLink
+                href="/posts"
+                label="Notícias"
+                icon={<FileTextIcon size={20} />}
+                sidebarOpen={sidebarOpen}
+              />
+            )}
             <NavLink
               href="/posts/new"
               label="Publicar"
@@ -155,15 +158,15 @@ export default function AdminLayout() {
         <main className="flex-1 overflow-auto bg-muted/10">
           <Switch>
             {isAdmin && <Route path="/" component={AdminDashboard} />}
-            <Route path="/posts" component={AdminPostsList} />
+            {isAdmin && <Route path="/posts" component={AdminPostsList} />}
             <Route path="/posts/new" component={AdminCreatePost} />
-            <Route path="/posts/:id/edit" component={AdminEditPost} />
+            {isAdmin && <Route path="/posts/:id/edit" component={AdminEditPost} />}
             {isAdmin && <Route path="/users" component={AdminUsersList} />}
             {isAdmin && <Route path="/messages" component={AdminMessages} />}
-            {/* Fallback to first available route */}
+            {/* Fallback: editors land directly on create post */}
             <Route>
               <div className="p-8">
-                {isAdmin ? <AdminDashboard /> : <AdminPostsList />}
+                {isAdmin ? <AdminDashboard /> : <AdminCreatePost />}
               </div>
             </Route>
           </Switch>
