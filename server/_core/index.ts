@@ -138,7 +138,7 @@ async function startServer() {
   });
 
   app.get("/api/version", (req, res) => {
-    res.json({ version: "v1.2.3-stable" });
+    res.json({ version: "v1.3.0-stable" });
   });
 
   registerStorageProxy(app);
