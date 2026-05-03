@@ -1,6 +1,7 @@
 import { useSearch, Link } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { trpc } from "@/lib/trpc";
 import { getCategoryLink } from "@/lib/categoryUtils";
 import { Loader2 } from "lucide-react";
@@ -17,6 +18,10 @@ export default function Search() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title={query ? `Busca: ${query}` : "Busca"}
+        description={query ? `Resultados de busca para: ${query}` : "Procure por notícias no Diário do Mundo."}
+      />
       <Header />
 
       <main className="flex-1">

@@ -1,9 +1,11 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 
 export default function Terms() {
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="Termos de Uso" />
       <Header />
 
       <main className="flex-1 bg-background">

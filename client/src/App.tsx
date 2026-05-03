@@ -45,6 +45,15 @@ function App() {
           <Toaster />
           <Router />
           <CookieBanner />
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "Diário do Mundo",
+              "url": "https://diariodomundov2.onrender.com/",
+              "logo": "https://diariodomundov2.onrender.com/favicon.svg"
+            })}
+          </script>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

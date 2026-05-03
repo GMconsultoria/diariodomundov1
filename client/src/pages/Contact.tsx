@@ -2,6 +2,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,6 +42,7 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="Contato" />
       <Header />
 
       <main className="flex-1 bg-background">

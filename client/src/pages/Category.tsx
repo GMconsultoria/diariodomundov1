@@ -2,6 +2,7 @@ import { useRoute, Link } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import NewsCard from "@/components/NewsCard";
+import SEO from "@/components/SEO";
 import { trpc } from "@/lib/trpc";
 import { getCategoryLink, categoryToSlug } from "@/lib/categoryUtils";
 import { Loader2 } from "lucide-react";
@@ -69,6 +70,10 @@ export default function Category() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title={category}
+        description={`Confira as últimas notícias sobre ${category} no Diário do Mundo.`}
+      />
       <Header />
 
       <main className="flex-1">

@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import NewsCard from "@/components/NewsCard";
+import SEO from "@/components/SEO";
 import { trpc } from "@/lib/trpc";
 import { getCategoryLink } from "@/lib/categoryUtils";
 import { Loader2, Facebook, Twitter, MessageCircle } from "lucide-react";
@@ -36,28 +37,6 @@ export default function Article() {
   );
   const related = relatedPostsRaw?.filter(p => p.id !== post?.id).slice(0, 3) ?? [];
 
-  useEffect(() => {
-    if (post) {
-      // Update page title and meta tags for SEO
-      document.title = `${post.title} - Diário do Mundo`;
-      
-      // Update meta description
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription) {
-        metaDescription.setAttribute('content', post.subtitle || post.title);
-      }
-      
-      // Update Open Graph tags
-      const ogTitle = document.querySelector('meta[property="og:title"]');
-      if (ogTitle) ogTitle.setAttribute('content', post.title);
-      
-      const ogDescription = document.querySelector('meta[property="og:description"]');
-      if (ogDescription) ogDescription.setAttribute('content', post.subtitle || post.title);
-      
-      const ogImage = document.querySelector('meta[property="og:image"]');
-      if (ogImage && post.imageUrl) ogImage.setAttribute('content', post.imageUrl);
-    }
-  }, [post]);
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
   const shareText = post?.title || '';
@@ -100,6 +79,28 @@ export default function Article() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title={post.title}
+        description={post.subtitle || post.title}
+        ogImage={post.imageUrl}
+        ogType="article"
+      />
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "NewsArticle",
+          "headline": post.title,
+          "description": post.subtitle || post.title,
+          "image": [post.imageUrl || "https://diariodomundov2.onrender.com/og-image.png"],
+          "datePublished": (post.publishedAt || post.createdAt).toISOString(),
+          "dateModified": post.updatedAt.toISOString(),
+          "author": [{
+            "@type": "Person",
+            "name": post.author,
+            "url": "https://diariodomundov2.onrender.com/"
+          }]
+        })}
+      </script>
       <Header />
 
       <main className="flex-1 bg-background">

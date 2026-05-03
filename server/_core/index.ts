@@ -65,6 +65,46 @@ async function startServer() {
     console.error("[Migration] Failed to run contact_messages migration:", err.message);
   }
   
+  // SEO: Sitemap.xml and Robots.txt
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      const { getAllPublishedPosts } = await import("../db");
+      const posts = await getAllPublishedPosts(1000); // Get latest 1000
+      
+      const origin = req.get('host') ? `${req.protocol}://${req.get('host')}` : 'https://diariodomundov2.onrender.com';
+      
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+      
+      // Home
+      xml += `  <url><loc>${origin}/</loc><changefreq>always</changefreq><priority>1.0</priority></url>\n`;
+      
+      // Static Pages
+      ['sobre', 'privacidade', 'termos', 'contato'].forEach(page => {
+        xml += `  <url><loc>${origin}/${page}</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>\n`;
+      });
+      
+      // Posts
+      posts.forEach(post => {
+        const date = new Date(post.publishedAt || post.createdAt).toISOString();
+        xml += `  <url><loc>${origin}/noticias/${post.slug}</loc><lastmod>${date}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>\n`;
+      });
+      
+      xml += `</urlset>`;
+      
+      res.header("Content-Type", "application/xml");
+      res.send(xml);
+    } catch (e) {
+      res.status(500).send("Error generating sitemap");
+    }
+  });
+
+  app.get("/robots.txt", (req, res) => {
+    const origin = req.get('host') ? `${req.protocol}://${req.get('host')}` : 'https://diariodomundov2.onrender.com';
+    res.type("text/plain");
+    res.send(`User-agent: *\nAllow: /\nSitemap: ${origin}/sitemap.xml`);
+  });
+
   // Health check
   app.get("/api/health", (req, res) => {
     res.json({ ok: true, timestamp: Date.now(), env: process.env.NODE_ENV });

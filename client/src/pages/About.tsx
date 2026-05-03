@@ -1,10 +1,12 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { Link } from "wouter";
 
 export default function About() {
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="Sobre Nós" description="Conheça a missão, valores e a história do Diário do Mundo, seu portal independente de notícias." />
       <Header />
 
       <main className="flex-1 bg-background">
