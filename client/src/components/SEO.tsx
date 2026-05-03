@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 
 interface SEOProps {
-  title?: string;
-  description?: string;
-  ogTitle?: string;
-  ogDescription?: string;
-  ogImage?: string;
+  title?: string | null;
+  description?: string | null;
+  ogTitle?: string | null;
+  ogDescription?: string | null;
+  ogImage?: string | null;
   ogType?: "website" | "article";
-  canonical?: string;
+  canonical?: string | null;
 }
 
 export default function SEO({

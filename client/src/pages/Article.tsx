@@ -92,8 +92,8 @@ export default function Article() {
           "headline": post.title,
           "description": post.subtitle || post.title,
           "image": [post.imageUrl || "https://diariodomundov2.onrender.com/og-image.png"],
-          "datePublished": (post.publishedAt || post.createdAt).toISOString(),
-          "dateModified": post.updatedAt.toISOString(),
+          "datePublished": (post.publishedAt || post.createdAt || new Date()).toISOString(),
+          "dateModified": (post.updatedAt || post.createdAt || new Date()).toISOString(),
           "author": [{
             "@type": "Person",
             "name": post.author,
