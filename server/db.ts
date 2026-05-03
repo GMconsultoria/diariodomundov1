@@ -317,8 +317,8 @@ export async function getDashboardStats(startDate?: string, endDate?: string) {
       })
       .from(postViews)
       .where(dateFilter)
-      .groupBy(sql`DATE_FORMAT(${postViews.viewedAt}, '%Y-%m-%d')`)
-      .orderBy(sql`DATE_FORMAT(${postViews.viewedAt}, '%Y-%m-%d')`);
+      .groupBy(sql`1`)
+      .orderBy(sql`1`);
     } catch (e) {
       console.error("[Database] Failed to fetch post_views:", e);
     }
