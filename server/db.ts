@@ -294,9 +294,11 @@ export async function getDashboardStats(startDate?: string, endDate?: string) {
     // Views by day - Failsafe: Fetch and group in JS
     let dateFilter: any = undefined;
     if (startDate && endDate) {
+      const endOfDay = new Date(endDate);
+      endOfDay.setHours(23, 59, 59, 999);
       dateFilter = and(
         gte(postViews.viewedAt, new Date(startDate)),
-        sql`${postViews.viewedAt} <= ${new Date(endDate)}`
+        sql`${postViews.viewedAt} <= ${endOfDay}`
       );
     } else if (startDate) {
       dateFilter = gte(postViews.viewedAt, new Date(startDate));
@@ -307,8 +309,9 @@ export async function getDashboardStats(startDate?: string, endDate?: string) {
     }
 
     let viewsByDay: { day: string; count: number }[] = [];
+    let rawViews: any[] = [];
     try {
-      const rawViews = await db.select({
+      rawViews = await db.select({
         day: sql<string>`DATE_FORMAT(${postViews.viewedAt}, '%Y-%m-%d')`,
         count: sql<number>`COUNT(*)`
       })
@@ -316,21 +319,25 @@ export async function getDashboardStats(startDate?: string, endDate?: string) {
       .where(dateFilter)
       .groupBy(sql`DATE_FORMAT(${postViews.viewedAt}, '%Y-%m-%d')`)
       .orderBy(sql`DATE_FORMAT(${postViews.viewedAt}, '%Y-%m-%d')`);
-
-      const viewMap = new Map(rawViews.map(v => [v.day, Number(v.count)]));
-      
-      const start = startDate ? new Date(startDate) : (() => { const d = new Date(); d.setDate(d.getDate() - 30); return d; })();
-      const end = endDate ? new Date(endDate) : new Date();
-      
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        const dayStr = d.toISOString().split('T')[0];
-        viewsByDay.push({
-          day: dayStr,
-          count: viewMap.get(dayStr) || 0
-        });
-      }
     } catch (e) {
       console.error("[Database] Failed to fetch post_views:", e);
+    }
+
+    const viewMap = new Map(rawViews.map(v => [v.day, Number(v.count)]));
+    
+    // Always generate the date range to ensure LineChart has data points
+    const start = startDate ? new Date(startDate) : (() => { const d = new Date(); d.setDate(d.getDate() - 30); return d; })();
+    const end = endDate ? new Date(endDate) : new Date();
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const dayStr = `${year}-${month}-${day}`;
+      viewsByDay.push({
+        day: dayStr,
+        count: viewMap.get(dayStr) || 0
+      });
     }
 
     // Views by category - Aggregated in SQL
