@@ -131,7 +131,7 @@ export const appRouter = router({
           return post;
         }),
 
-      getAll: adminProcedure
+      getAll: editorProcedure
         .input(z.object({
           limit: z.number().default(20),
           offset: z.number().default(0),
@@ -139,8 +139,10 @@ export const appRouter = router({
           search: z.string().optional(),
           author: z.string().optional(),
         }))
-        .query(async ({ input }) => {
-          return await getAllPostsAdmin(input.limit, input.offset, input.category, input.search, input.author);
+        .query(async ({ input, ctx }) => {
+          // If editor, only show their own posts
+          const authorIdFilter = ctx.user.role === "editor" ? ctx.user.id : undefined;
+          return await getAllPostsAdmin(input.limit, input.offset, input.category, input.search, input.author, authorIdFilter);
         }),
 
       create: editorProcedure
@@ -155,7 +157,7 @@ export const appRouter = router({
           published: z.boolean().default(false),
           publishedAt: z.string().optional(),
         }))
-        .mutation(async ({ input }) => {
+        .mutation(async ({ input, ctx }) => {
           const slug = generateSlug(input.title);
           const existing = await getPostBySlug(slug);
           if (existing) throw new TRPCError({ code: "CONFLICT", message: "A post with this title already exists" });
@@ -170,11 +172,12 @@ export const appRouter = router({
           return await createPost({
             ...postData,
             slug,
+            authorId: ctx.user.id,
             publishedAt: publishedAtDate,
           });
         }),
 
-      update: adminProcedure
+      update: editorProcedure
         .input(z.object({
           id: z.number(),
           title: z.string().optional(),
@@ -187,10 +190,15 @@ export const appRouter = router({
           published: z.boolean().optional(),
           publishedAt: z.string().optional(),
         }))
-        .mutation(async ({ input }) => {
+        .mutation(async ({ input, ctx }) => {
           const { id, ...updates } = input;
           const post = await getPostById(id);
           if (!post) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+
+          // Ownership check for editors
+          if (ctx.user.role === "editor" && post.authorId !== ctx.user.id) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "Você só pode editar suas próprias notícias" });
+          }
 
           let slug = post.slug;
           if (updates.title && updates.title !== post.title) {

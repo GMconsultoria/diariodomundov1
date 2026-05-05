@@ -158,19 +158,24 @@ export default function Header() {
             )}
           </div>
 
-          {/* Mobile Search Icon */}
-          <button
-            onClick={() => {
-              const searchInput = document.querySelector('.mobile-search-input') as HTMLInputElement;
-              if (searchInput) {
-                searchInput.focus();
-              }
-            }}
-            className="md:hidden text-blue-400 hover:text-blue-300 transition-colors"
-            aria-label="Search"
-          >
-            <Search size={20} />
-          </button>
+          {/* Mobile Auth Button (Top Right) */}
+          <div className="md:hidden">
+            {isAuthenticated ? (
+              <button 
+                onClick={() => setLocation("/admin/")}
+                className="px-3 py-1.5 bg-gray-800 text-white rounded text-xs font-semibold border border-gray-700"
+              >
+                Painel
+              </button>
+            ) : (
+              <button 
+                onClick={handleLogin}
+                className="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs font-semibold"
+              >
+                Entrar
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Mobile Search Bar */}
@@ -210,71 +215,7 @@ export default function Header() {
           </div>
         </nav>
 
-        {/* Mobile Auth */}
-        <div className="md:hidden px-4 pt-3 border-t border-gray-700 flex gap-2">
-          {isAuthenticated ? (
-            <div className="flex-1">
-              <button 
-                onClick={() => setIsMobileDropdownOpen(!isMobileDropdownOpen)}
-                className="flex items-center justify-between w-full text-sm text-white font-semibold bg-gray-800 px-4 py-2 rounded"
-              >
-                Minha Conta <ChevronDown size={16} className={`transition-transform ${isMobileDropdownOpen ? "rotate-180" : ""}`} />
-              </button>
-              
-              {isMobileDropdownOpen && (
-                <div className="mt-2 bg-gray-900 rounded-lg py-2 border border-gray-700">
-                  <div className="px-4 py-2 border-b border-gray-800">
-                    <p className="text-xs text-gray-400">Logado como:</p>
-                    <p className="text-sm text-white font-semibold truncate">{user?.name}</p>
-                  </div>
-                  
-                  {user?.role === "admin" && (
-                    <Link href="/admin/" className="no-underline block px-4 py-3 text-sm text-white hover:bg-gray-800 transition-colors">
-                      Acessar Painel Admin
-                    </Link>
-                  )}
 
-                  {user?.role === "editor" && (
-                    <Link href="/admin/" className="no-underline block px-4 py-3 text-sm text-white hover:bg-gray-800 transition-colors">
-                      Acessar Painel
-                    </Link>
-                  )}
-
-                  {user?.role === "reader" && (
-                    <button
-                      onClick={handleDeleteAccount}
-                      className="w-full text-left px-4 py-3 text-sm text-gray-400 hover:text-red-500 hover:bg-gray-800 transition-colors flex items-center gap-2 cursor-pointer"
-                    >
-                      <UserX size={16} /> Excluir Conta
-                    </button>
-                  )}
-                  
-                  <button 
-                    onClick={() => logout()}
-                    className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-gray-800 transition-colors flex items-center gap-2 cursor-pointer"
-                  >
-                    <LogOut size={16} /> Sair
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : loginUrl ? (
-            <button 
-              onClick={handleLogin}
-              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-semibold"
-            >
-              Entrar
-            </button>
-          ) : (
-            <button
-              disabled
-              className="px-4 py-2 bg-gray-600 text-white rounded text-sm font-semibold cursor-not-allowed"
-              title="Login indisponível: configuração ausente"
-            >
-              Entrar
-            </button>
-          )}
-        </div>
       </div>
     </header>
   );

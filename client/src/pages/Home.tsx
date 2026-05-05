@@ -80,11 +80,6 @@ export default function Home() {
                       <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 leading-tight group-hover:text-gray-200 transition-colors">
                         {featuredPost.title}
                       </h1>
-                      {featuredPost.subtitle && (
-                        <p className="text-base text-gray-200 mb-3">
-                          {featuredPost.subtitle}
-                        </p>
-                      )}
                       <div className="flex items-center gap-4 text-sm text-gray-300">
                         <span>{featuredPost.author}</span>
                         <span>•</span>

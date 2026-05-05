@@ -15,6 +15,30 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import CookieBanner from "./components/CookieBanner";
+import { useEffect } from "react";
+import { useLocation } from "wouter";
+
+// Analytics tracker for SPA navigation
+function AnalyticsTracker() {
+  const [location] = useLocation();
+
+  useEffect(() => {
+    if (typeof window.gtag === "function") {
+      window.gtag("config", "G-EXGCVYWJZ1", {
+        page_path: location,
+      });
+    }
+  }, [location]);
+
+  return null;
+}
+
+// Add gtag to Window interface
+declare global {
+  interface Window {
+    gtag: (...args: any[]) => void;
+  }
+}
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -42,6 +66,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
+          <AnalyticsTracker />
           <Toaster />
           <Router />
           <CookieBanner />

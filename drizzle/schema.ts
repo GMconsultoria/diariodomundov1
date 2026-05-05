@@ -39,6 +39,7 @@ export const posts = mysqlTable("posts", {
   imageKey: varchar("imageKey", { length: 255 }),
   category: mysqlEnum("category", CATEGORIES as unknown as [string, ...string[]]).notNull(),
   author: varchar("author", { length: 255 }).notNull(),
+  authorId: int("authorId"),
   published: boolean("published").default(false).notNull(),
   views: int("views").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

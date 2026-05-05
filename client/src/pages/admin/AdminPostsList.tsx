@@ -100,7 +100,9 @@ export default function AdminPostsList() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-bold mb-2">Notícias</h1>
-          <p className="text-muted-foreground">Gerencie o conteúdo do portal</p>
+          <p className="text-muted-foreground">
+            {user?.role === "editor" ? "Gerencie suas publicações" : "Gerencie o conteúdo do portal"}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <button 
@@ -150,25 +152,27 @@ export default function AdminPostsList() {
             ))}
           </select>
         </div>
-        <div className="relative min-w-[200px]">
-          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-          <input
-            type="text"
-            placeholder="Filtrar por autor..."
-            className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-lg focus:outline-none focus:border-accent text-sm"
-            value={author}
-            onChange={(e) => {
-              setAuthor(e.target.value);
-              setPage(0);
-            }}
-          />
-        </div>
+        {user?.role === "admin" && (
+          <div className="relative min-w-[200px]">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <input
+              type="text"
+              placeholder="Filtrar por autor..."
+              className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-lg focus:outline-none focus:border-accent text-sm"
+              value={author}
+              onChange={(e) => {
+                setAuthor(e.target.value);
+                setPage(0);
+              }}
+            />
+          </div>
+        )}
       </div>
 
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         {!posts || posts.length === 0 ? (
           <div className="p-12 text-center">
-            <p className="text-muted-foreground">Nenhuma notícia encontrada com os filtros atuais.</p>
+            <p className="text-muted-foreground">Nenhuma notícia encontrada.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -218,12 +222,14 @@ export default function AdminPostsList() {
                         <Link href={`/posts/${post.id}/edit`} className="p-2 hover:bg-muted rounded-lg transition-colors text-blue-600">
                           <Edit size={18} />
                         </Link>
-                        <button
-                          onClick={() => setConfirmDelete(post.id)}
-                          className="p-2 hover:bg-muted rounded-lg transition-colors text-red-600"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        {user?.role === "admin" && (
+                          <button
+                            onClick={() => setConfirmDelete(post.id)}
+                            className="p-2 hover:bg-muted rounded-lg transition-colors text-red-600"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

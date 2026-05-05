@@ -38,9 +38,6 @@ function NewsCard({
         <h3 className={`font-bold text-foreground mb-2 line-clamp-2 group-hover:text-accent transition-colors ${titleSize}`}>
           {post.title}
         </h3>
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-          {post.subtitle}
-        </p>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{post.author}</span>
           <span>{new Date(post.publishedAt || post.createdAt).toLocaleDateString('pt-BR')}</span>
