@@ -35,7 +35,7 @@ export const posts = mysqlTable("posts", {
   slug: varchar("slug", { length: 255 }).notNull().unique(),
   subtitle: text("subtitle"),
   content: text("content").notNull(),
-  imageUrl: varchar("imageUrl", { length: 512 }),
+  imageUrl: text("imageUrl"),
   imageKey: varchar("imageKey", { length: 255 }),
   category: mysqlEnum("category", CATEGORIES as unknown as [string, ...string[]]).notNull(),
   author: varchar("author", { length: 255 }).notNull(),
