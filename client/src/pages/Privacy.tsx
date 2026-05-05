@@ -70,9 +70,21 @@ export default function Privacy() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold mt-8 mb-4">6. Cookies</h2>
+              <h2 className="text-2xl font-bold mt-8 mb-4">6. Cookies e Publicidade</h2>
               <p>
-                Utilizamos cookies apenas para manter sua sessão ativa e para funcionamento técnico do site. Você pode gerenciar suas preferências de cookies através do seu navegador ou do nosso banner de consentimento.
+                Utilizamos cookies para melhorar sua experiência e oferecer conteúdo personalizado. Além dos cookies técnicos de sessão, utilizamos serviços de terceiros, como o <strong>Google AdSense</strong>.
+              </p>
+              <ul className="ml-4 space-y-2 mt-2">
+                <li>• O Google, como fornecedor de terceiros, utiliza cookies para exibir anúncios neste site.</li>
+                <li>• Com o cookie DART, o Google pode exibir anúncios para você com base na sua visita a este e a outros sites na Internet.</li>
+                <li>• Você pode desativar o cookie DART visitando a Política de Privacidade da rede de conteúdo e dos anúncios do Google.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mt-8 mb-4">7. Fornecedores de Terceiros</h2>
+              <p>
+                Terceiros, incluindo o Google, usam cookies para veicular anúncios com base em visitas anteriores do usuário ao seu website ou a outros websites. O uso de cookies de publicidade pelo Google permite que ele e seus parceiros veiculem anúncios para os usuários com base nas visitas a seus sites e/ou a outros sites na Internet.
               </p>
             </section>
 
