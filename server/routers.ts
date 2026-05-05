@@ -233,9 +233,13 @@ export const appRouter = router({
             const key = `posts/${Date.now()}-${input.filename}`;
             const { url, key: storageKey } = await storagePut(key, buffer, detected.mime);
             return { url, key: storageKey };
-          } catch (error) {
+          } catch (error: any) {
+            console.error("[Upload] Critical failure:", error);
             if (error instanceof TRPCError) throw error;
-            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to upload image" });
+            throw new TRPCError({ 
+              code: "INTERNAL_SERVER_ERROR", 
+              message: `Erro no servidor: ${error.message || "Falha na comunicação com o storage"}` 
+            });
           }
         }),
     }),
