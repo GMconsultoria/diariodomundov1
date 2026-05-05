@@ -8,4 +8,7 @@ export const ENV = {
   baseUrl: process.env.BASE_URL?.replace(/\/+$/, "") ?? "",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME ?? "dnf2ervbd",
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY ?? "323245979113573",
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET ?? "wd7J7Ygh2xW2-0LMyAmVPalRSBU",
 };

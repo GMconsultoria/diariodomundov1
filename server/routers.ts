@@ -231,9 +231,8 @@ export const appRouter = router({
               throw new TRPCError({ code: "BAD_REQUEST", message: "Formato de imagem inválido" });
             }
             const key = `posts/${Date.now()}-${input.filename}`;
-            // Convert to Data URI for direct DB storage
-            const dataUri = `data:${detected.mime};base64,${input.data}`;
-            return { url: dataUri, key: "embedded" };
+            const { url, key: storageKey } = await storagePut(key, buffer, detected.mime);
+            return { url, key: storageKey };
           } catch (error: any) {
             console.error("[Upload] Critical failure:", error);
             if (error instanceof TRPCError) throw error;
