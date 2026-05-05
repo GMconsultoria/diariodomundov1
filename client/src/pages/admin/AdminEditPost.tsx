@@ -128,8 +128,13 @@ export default function AdminEditPost() {
       });
       setFormData((prev) => ({ ...prev, imageUrl: result.url, imageKey: result.key }));
       toast.success("Imagem atualizada!", { id: uploadToast });
-    } catch (err) {
-      toast.error("Erro no upload", { id: uploadToast });
+    } catch (err: any) {
+      const errorMsg = err.message || "Erro desconhecido";
+      toast.error("Erro no upload", { 
+        id: uploadToast,
+        description: `Detalhe: ${errorMsg}`
+      });
+      console.error("Upload error:", err);
     } finally {
       setImageLoading(false);
     }
