@@ -71,29 +71,50 @@ export default function AdminCreatePost() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Arquivo muito grande", { description: "O tamanho máximo permitido é 5MB." });
-      return;
-    }
-
     setImageLoading(true);
-    const uploadToast = toast.loading("Enviando imagem...");
+    const uploadToast = toast.loading("Processando imagem...");
     
     try {
+      // Client-side resizing logic
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (event) => resolve((event.target?.result as string).split(",")[1]);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            let width = img.width;
+            let height = img.height;
+            
+            // Max width 1200px, keeping aspect ratio
+            const MAX_WIDTH = 1200;
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            // Quality 0.7 for good balance between size and quality
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+            resolve(dataUrl.split(",")[1]);
+          };
+          img.onerror = reject;
+          img.src = event.target?.result as string;
+        };
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
       
       const result = await uploadImageMutation.mutateAsync({
-        filename: file.name,
+        filename: file.name.replace(/\.[^/.]+$/, "") + ".jpg",
         data: base64,
       });
       
       setFormData((prev) => ({ ...prev, imageUrl: result.url, imageKey: result.key }));
-      toast.success("Imagem enviada!", { id: uploadToast });
+      toast.success("Imagem pronta!", { id: uploadToast });
     } catch (err: any) {
       const errorMsg = err.message || "Erro desconhecido";
       toast.error("Erro no upload", { 

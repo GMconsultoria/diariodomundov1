@@ -107,23 +107,43 @@ export default function AdminEditPost() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Arquivo muito grande", { description: "O limite é 5MB." });
-      return;
-    }
-
     setImageLoading(true);
-    const uploadToast = toast.loading("Atualizando imagem...");
+    const uploadToast = toast.loading("Processando imagem...");
     
     try {
+      // Client-side resizing logic
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (event) => resolve((event.target?.result as string).split(",")[1]);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            let width = img.width;
+            let height = img.height;
+            
+            const MAX_WIDTH = 1200;
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+            resolve(dataUrl.split(",")[1]);
+          };
+          img.onerror = reject;
+          img.src = event.target?.result as string;
+        };
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+
       const result = await uploadImageMutation.mutateAsync({
-        filename: file.name,
+        filename: file.name.replace(/\.[^/.]+$/, "") + ".jpg",
         data: base64,
       });
       setFormData((prev) => ({ ...prev, imageUrl: result.url, imageKey: result.key }));
