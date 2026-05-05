@@ -186,7 +186,7 @@ export async function getAllPublishedPosts(limit: number = 30, offset: number = 
   return await db
     .select(POST_SELECT_FIELDS)
     .from(posts)
-    .where(eq(posts.published, true))
+    .where(and(eq(posts.published, true), lte(posts.publishedAt, new Date())))
     .orderBy(desc(posts.publishedAt))
     .limit(limit)
     .offset(offset);
@@ -201,7 +201,13 @@ export async function getPostsByCategory(category: string, limit: number = 50, o
   return await db
     .select(POST_SELECT_FIELDS)
     .from(posts)
-    .where(and(eq(posts.published, true), eq(posts.category, validatedCategory)))
+    .where(
+      and(
+        eq(posts.published, true),
+        eq(posts.category, validatedCategory),
+        lte(posts.publishedAt, new Date())
+      )
+    )
     .orderBy(desc(posts.publishedAt))
     .limit(limit)
     .offset(offset);
@@ -218,6 +224,7 @@ export async function searchPosts(query: string, limit: number = 50): Promise<an
     .where(
       and(
         eq(posts.published, true),
+        lte(posts.publishedAt, new Date()),
         sql`(${posts.title} LIKE ${searchTerm} OR ${posts.subtitle} LIKE ${searchTerm} OR ${posts.content} LIKE ${searchTerm})`
       )
     )

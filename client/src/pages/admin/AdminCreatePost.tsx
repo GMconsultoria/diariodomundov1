@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Upload, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, Upload, CheckCircle2, AlertCircle, Clock, Calendar } from "lucide-react";
 import { CATEGORIES } from "@shared/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
@@ -18,8 +18,11 @@ export default function AdminCreatePost() {
     author: "",
     imageUrl: "",
     imageKey: "",
-    published: false,
+    published: true, // Default to true but controlled by date
+    publishedAt: new Date().toISOString().slice(0, 16), // Format for datetime-local: YYYY-MM-DDTHH:mm
   });
+
+  const [isScheduled, setIsScheduled] = useState(false);
 
   // Auto-fill author from logged-in user
   useEffect(() => {
@@ -32,8 +35,11 @@ export default function AdminCreatePost() {
   
   const createMutation = trpc.admin.posts.create.useMutation({
     onSuccess: () => {
-      toast.success("Notícia publicada com sucesso!", {
-        description: "O conteúdo já está disponível no portal.",
+      const isFuture = new Date(formData.publishedAt) > new Date();
+      toast.success(isFuture ? "Notícia agendada!" : "Notícia publicada!", {
+        description: isFuture 
+          ? `O conteúdo entrará no ar em ${new Date(formData.publishedAt).toLocaleString()}`
+          : "O conteúdo já está disponível no portal.",
         icon: <CheckCircle2 className="text-green-500" />
       });
       setLocation("/posts");
@@ -101,7 +107,14 @@ export default function AdminCreatePost() {
       toast.warning("Conteúdo muito curto", { description: "Escreva um pouco mais para seus leitores." });
       return;
     }
-    await createMutation.mutateAsync(formData as any);
+    
+    // If not scheduled, ensure we use the current exact time
+    const finalData = {
+      ...formData,
+      publishedAt: isScheduled ? formData.publishedAt : new Date().toISOString()
+    };
+    
+    await createMutation.mutateAsync(finalData as any);
   };
 
   return (
@@ -109,7 +122,7 @@ export default function AdminCreatePost() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2 tracking-tight">Nova Notícia</h1>
         <p className="text-muted-foreground text-lg">
-          Compouse seu conteúdo e publique para milhares de leitores.
+          Compose seu conteúdo e publique para milhares de leitores.
         </p>
       </div>
 
@@ -234,19 +247,56 @@ export default function AdminCreatePost() {
             </div>
           </div>
 
-          {/* Publish Toggle */}
-          <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl w-fit">
-            <input
-              type="checkbox"
-              name="published"
-              id="published"
-              checked={formData.published}
-              onChange={handleInputChange}
-              className="w-5 h-5 rounded accent-accent"
-            />
-            <label htmlFor="published" className="font-bold text-sm cursor-pointer select-none">
-              Publicar imediatamente no portal
-            </label>
+          {/* Schedule / Publish Section */}
+          <div className="p-6 bg-muted/20 rounded-2xl border border-border space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-full ${!isScheduled ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                  {isScheduled ? <Clock size={24} /> : <CheckCircle2 size={24} />}
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">{isScheduled ? 'Agendar Publicação' : 'Publicar Agora'}</h3>
+                  <p className="text-sm text-muted-foreground">Defina quando esta notícia ficará visível no portal.</p>
+                </div>
+              </div>
+              
+              <button
+                type="button"
+                onClick={() => setIsScheduled(!isScheduled)}
+                className="px-4 py-2 bg-white text-black border border-border rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors"
+              >
+                {isScheduled ? 'Mudar para Publicar Agora' : 'Deseja Agendar?'}
+              </button>
+            </div>
+
+            {isScheduled && (
+              <div className="pt-4 border-t border-border/50 animate-in slide-in-from-top-2 duration-300">
+                <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <Calendar size={14} /> Selecione Data e Hora
+                </label>
+                <input
+                  type="datetime-local"
+                  name="publishedAt"
+                  value={formData.publishedAt}
+                  onChange={handleInputChange}
+                  className="w-full md:w-fit px-4 py-3 bg-white text-black rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent font-bold"
+                />
+              </div>
+            )}
+            
+            <div className="flex items-center gap-3 pt-2">
+              <input
+                type="checkbox"
+                name="published"
+                id="published"
+                checked={formData.published}
+                onChange={handleInputChange}
+                className="w-5 h-5 rounded accent-accent"
+              />
+              <label htmlFor="published" className="font-bold text-sm cursor-pointer select-none">
+                {formData.published ? 'Ativar publicação (visível conforme data)' : 'Salvar apenas como Rascunho'}
+              </label>
+            </div>
           </div>
 
           {/* Actions */}
@@ -258,8 +308,8 @@ export default function AdminCreatePost() {
             >
               {createMutation.isPending ? (
                 <Loader2 size={20} className="animate-spin" />
-              ) : <CheckCircle2 size={20} />}
-              {createMutation.isPending ? "Processando..." : "Finalizar e Publicar"}
+              ) : isScheduled ? <Clock size={20} /> : <CheckCircle2 size={20} />}
+              {createMutation.isPending ? "Processando..." : isScheduled ? "Agendar Notícia" : "Finalizar e Publicar"}
             </button>
             <button
               type="button"

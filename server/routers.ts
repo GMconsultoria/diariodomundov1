@@ -153,16 +153,24 @@ export const appRouter = router({
           imageUrl: z.string().optional(),
           imageKey: z.string().optional(),
           published: z.boolean().default(false),
+          publishedAt: z.string().optional(),
         }))
         .mutation(async ({ input }) => {
           const slug = generateSlug(input.title);
           const existing = await getPostBySlug(slug);
           if (existing) throw new TRPCError({ code: "CONFLICT", message: "A post with this title already exists" });
 
+          let publishedAtDate = input.publishedAt ? new Date(input.publishedAt) : null;
+          if (input.published && !publishedAtDate) {
+            publishedAtDate = new Date();
+          }
+
+          const { publishedAt, ...postData } = input;
+
           return await createPost({
-            ...input,
+            ...postData,
             slug,
-            publishedAt: input.published ? new Date() : null,
+            publishedAt: publishedAtDate,
           });
         }),
 
@@ -177,6 +185,7 @@ export const appRouter = router({
           imageUrl: z.string().optional(),
           imageKey: z.string().optional(),
           published: z.boolean().optional(),
+          publishedAt: z.string().optional(),
         }))
         .mutation(async ({ input }) => {
           const { id, ...updates } = input;
@@ -191,11 +200,16 @@ export const appRouter = router({
           }
 
           let publishedAt = post.publishedAt;
-          if (updates.published !== undefined && updates.published !== post.published) {
-            publishedAt = updates.published ? new Date() : null;
+          if (updates.publishedAt) {
+            publishedAt = new Date(updates.publishedAt);
+          } else if (updates.published === true && !post.published) {
+            // If turning on publishing and no date was set, use now
+            publishedAt = new Date();
           }
 
-          return await updatePost(id, { ...updates, slug, publishedAt });
+          const { publishedAt: _, ...finalUpdates } = updates;
+
+          return await updatePost(id, { ...finalUpdates, slug, publishedAt });
         }),
 
       delete: adminProcedure

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Upload, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, Upload, CheckCircle2, AlertCircle, Clock, Calendar } from "lucide-react";
 import { CATEGORIES } from "@shared/const";
 import { toast } from "sonner";
 
@@ -19,8 +19,10 @@ export default function AdminEditPost() {
     imageUrl: "",
     imageKey: "",
     published: false,
+    publishedAt: new Date().toISOString().slice(0, 16),
   });
 
+  const [isScheduled, setIsScheduled] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
 
   const updateMutation = trpc.admin.posts.update.useMutation({
@@ -48,6 +50,7 @@ export default function AdminEditPost() {
 
   useEffect(() => {
     if (post) {
+      const pubDate = post.publishedAt ? new Date(post.publishedAt) : new Date();
       setFormData({
         title: post.title,
         subtitle: post.subtitle || "",
@@ -57,7 +60,13 @@ export default function AdminEditPost() {
         imageUrl: post.imageUrl || "",
         imageKey: post.imageKey || "",
         published: post.published,
+        publishedAt: pubDate.toISOString().slice(0, 16),
       });
+      
+      // If the publishedAt is in the future, it's definitely scheduled
+      if (post.publishedAt && new Date(post.publishedAt) > new Date()) {
+        setIsScheduled(true);
+      }
     }
   }, [post]);
 
@@ -129,7 +138,15 @@ export default function AdminEditPost() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!postId) return;
-    await updateMutation.mutateAsync({ id: postId, ...formData } as any);
+    
+    // If not explicitly scheduled via the UI toggle, we keep the original date 
+    // unless it's a new publication toggle
+    const finalData = {
+      ...formData,
+      publishedAt: isScheduled ? formData.publishedAt : formData.publishedAt 
+    };
+
+    await updateMutation.mutateAsync({ id: postId, ...finalData } as any);
   };
 
   return (
@@ -240,19 +257,56 @@ export default function AdminEditPost() {
             />
           </div>
 
-          {/* Status Toggle */}
-          <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl w-fit">
-            <input
-              type="checkbox"
-              name="published"
-              id="published"
-              checked={formData.published}
-              onChange={handleInputChange}
-              className="w-5 h-5 rounded accent-accent"
-            />
-            <label htmlFor="published" className="font-bold text-sm cursor-pointer select-none">
-              {formData.published ? "Esta notícia está PUBLICADA" : "Esta notícia é um RASCUNHO"}
-            </label>
+          {/* Schedule / Publish Section */}
+          <div className="p-6 bg-muted/20 rounded-2xl border border-border space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-full ${!isScheduled ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                  {isScheduled ? <Clock size={24} /> : <CheckCircle2 size={24} />}
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">{isScheduled ? 'Agendamento Ativo' : 'Publicação Imediata'}</h3>
+                  <p className="text-sm text-muted-foreground">Controle quando esta notícia deve ser exibida.</p>
+                </div>
+              </div>
+              
+              <button
+                type="button"
+                onClick={() => setIsScheduled(!isScheduled)}
+                className="px-4 py-2 bg-white text-black border border-border rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors"
+              >
+                {isScheduled ? 'Mudar para Publicar Agora' : 'Alterar Agendamento'}
+              </button>
+            </div>
+
+            {(isScheduled || (formData.publishedAt && new Date(formData.publishedAt) < new Date())) && (
+              <div className="pt-4 border-t border-border/50 animate-in slide-in-from-top-2 duration-300">
+                <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <Calendar size={14} /> {isScheduled ? 'Agendado para:' : 'Publicado originalmente em:'}
+                </label>
+                <input
+                  type="datetime-local"
+                  name="publishedAt"
+                  value={formData.publishedAt}
+                  onChange={handleInputChange}
+                  className="w-full md:w-fit px-4 py-3 bg-white text-black rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent font-bold"
+                />
+              </div>
+            )}
+            
+            <div className="flex items-center gap-3 pt-2">
+              <input
+                type="checkbox"
+                name="published"
+                id="published"
+                checked={formData.published}
+                onChange={handleInputChange}
+                className="w-5 h-5 rounded accent-accent"
+              />
+              <label htmlFor="published" className="font-bold text-sm cursor-pointer select-none">
+                {formData.published ? 'Ativar publicação (visível conforme data)' : 'Salvar apenas como Rascunho'}
+              </label>
+            </div>
           </div>
 
           {/* Actions */}
