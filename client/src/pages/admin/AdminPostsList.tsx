@@ -15,10 +15,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { User } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const PAGE_SIZE = 15;
 
 export default function AdminPostsList() {
+  const { user } = useAuth();
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
