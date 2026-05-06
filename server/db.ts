@@ -31,6 +31,19 @@ export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
       _db = drizzle(process.env.DATABASE_URL);
+      
+      // Nuclear Option: Force create column if drizzle-kit push failed
+      console.log("[Database] Checking for schema updates...");
+      await _db.execute(sql`
+        ALTER TABLE \`posts\` 
+        ADD COLUMN IF NOT EXISTS \`author_id\` INT AFTER \`author\`
+      `).catch(err => {
+        // Ignore "Duplicate column name" error, but log others
+        if (!err.message?.includes("Duplicate column")) {
+          console.error("[Database] Auto-migration error:", err.message);
+        }
+      });
+      
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
