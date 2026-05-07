@@ -23,10 +23,20 @@ function AnalyticsTracker() {
   const [location] = useLocation();
 
   useEffect(() => {
+    // Track GA4
     if (typeof window.gtag === "function") {
       window.gtag("config", "G-EXGCVYWJZ1", {
         page_path: location,
       });
+    }
+
+    // Refresh AdSense (Auto Ads) for SPA
+    try {
+      if (typeof (window as any).adsbygoogle !== "undefined") {
+        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+      }
+    } catch (e) {
+      console.warn("AdSense refresh error:", e);
     }
   }, [location]);
 
